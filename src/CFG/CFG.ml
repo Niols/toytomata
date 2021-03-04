@@ -59,6 +59,7 @@ let regroup_rhs rhs =
   in
   let terminals = List.map (function Terminal a -> a | _ -> assert false) terminals in
   let nonterminals = List.map (function NonTerminal v -> v | _ -> assert false) nonterminals in
+  let nonterminals = List.rev nonterminals in (* actually crucial *)
   let rec regroup group terminals nonterminals =
     match terminals, nonterminals with
     | [], nonterminals -> List.rev_append group (List.map (fun v -> OnlyNonTerminal v) nonterminals)

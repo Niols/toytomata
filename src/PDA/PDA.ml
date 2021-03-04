@@ -45,8 +45,8 @@ let one_step pda (state, word, stack) =
          Assert_failure _ -> [])
     pda.transitions
 
-let rec all_steps pda ((state, word, _) as conf) =
-  if word = [] && List.mem state pda.finals then
+let rec all_steps pda ((state, word, stack) as conf) =
+  if word = [] && List.mem state pda.finals && stack = [] then
     [conf]
   else
     one_step pda conf

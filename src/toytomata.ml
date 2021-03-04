@@ -9,17 +9,17 @@ let g1 =
 
 let g1 = CFG.replace_late_terminals g1
 
-let () =
-  pf "@\nAfter replacing terminals that appear after a non-terminal:@.";
-  g1
-  |> CFG.ToSyntax.grammar__to__grammar
-  |> CFG.Syntax.Printer.pp_grammar stdfmt
+(* let () =
+ *   pf "@\nAfter replacing terminals that appear after a non-terminal:@.";
+ *   g1
+ *   |> CFG.ToSyntax.grammar__to__grammar
+ *   |> CFG.Syntax.Printer.pp_grammar stdfmt *)
 
 let pda1 = CFG.to_pda g1
 
-let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g1 PDA.pp pda1
+(* let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g1 PDA.pp pda1 *)
 
-let () = pf "Please enter a second grammar:@."
+let () = pf "@\nPlease enter a second grammar:@."
 
 let g2 =
   CFG.Syntax.from_channel stdin
@@ -27,25 +27,27 @@ let g2 =
 
 let g2 = CFG.replace_late_terminals g2
 
-let () =
-  pf "@\nAfter replacing terminals that appear after a non-terminal:@.";
-  g2
-  |> CFG.ToSyntax.grammar__to__grammar
-  |> CFG.Syntax.Printer.pp_grammar stdfmt
+(* let () =
+ *   pf "@\nAfter replacing terminals that appear after a non-terminal:@.";
+ *   g2
+ *   |> CFG.ToSyntax.grammar__to__grammar
+ *   |> CFG.Syntax.Printer.pp_grammar stdfmt *)
 
 let pda2 = CFG.to_pda g2
 
-let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g2 PDA.pp pda2
+(* let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g2 PDA.pp pda2 *)
 
 let alphabet =
   CFG.AST.terminals_from_grammar g1 @ CFG.AST.terminals_from_grammar g2
   |> List.sort_uniq compare
 
-let () = pf "Alphabet has %d letters: %s.@." (List.length alphabet) (String.concat ", " alphabet)
+let () = pf "@\nAlphabet has %d letters: %s.@." (List.length alphabet) (String.concat ", " alphabet)
 
 exception NotEquivalent of string
 
-type word = string list [@@deriving show { with_path = false } ]
+let pp_word fmt = function
+  | [] -> Format.pp_print_string fmt "λ"
+  | word -> Format.(pp_print_list ~pp_sep:(fun _fmt () -> ()) pp_print_string) fmt word
 
 let test_all_words () =
   let not_equivalent first second word =
@@ -55,12 +57,15 @@ let test_all_words () =
       )))
   in
   let rec test_all_words length words =
-    pf "\rTrying words of length %d... @?" length;
+    pf "\r[%d] @?" length;
     let next_words =
       List.concat_map
         (fun word ->
            match PDA.accepts pda1 word, PDA.accepts pda2 word with
-           | true, true | false, false -> List.map (fun a -> a :: word) alphabet
+           | true, true ->
+             pf "%a@\n\r[%d] @?" pp_word word length;
+             List.map (fun a -> a :: word) alphabet
+           | false, false -> List.map (fun a -> a :: word) alphabet
            | true, false -> not_equivalent "first" "second" word
            | false, true -> not_equivalent "second" "first" word)
         words
@@ -72,4 +77,5 @@ let test_all_words () =
   with
     NotEquivalent msg -> pf "@.%s" msg
 
+let () = pf "@\nTesting the two grammars on all the words.@\nThe output shows all the words accepted by both grammars.@\nThe tool stops as soon as it finds a word that differenciates@\nthe two grammars, and loops forever if there is none.@."
 let () = test_all_words ()
