@@ -45,24 +45,15 @@ let one_step pda (state, word, stack) =
          Assert_failure _ -> [])
     pda.transitions
 
-let rec all_steps n pda ((state, word, _) as conf) =
-  Format.eprintf "%s%a" (String.make (2*n) ' ') pp_configuration conf;
+let rec all_steps pda ((state, word, _) as conf) =
   if word = [] && List.mem state pda.finals then
-    (
-      Format.eprintf " <-- returned@.";
-      [conf]
-    )
+    [conf]
   else
-    (
-      Format.eprintf "@.";
-      one_step pda conf
-      |> List.concat_map (all_steps (n+1) pda)
-    )
+    one_step pda conf
+    |> List.concat_map (all_steps pda)
 
 let accepts pda word =
-  let res = all_steps 0 pda (pda.initial, word, []) in
-  Format.eprintf "Result #: %d@." (List.length res);
-  res <> []
+  all_steps pda (pda.initial, word, []) <> []
 
 let fresh_state =
   let counter = ref 0 in

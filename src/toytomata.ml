@@ -1,51 +1,48 @@
 let pf = Format.printf
 
-let () = pf "About to parse grammar...@."
-let cst = CFG.Syntax.from_channel stdin
-let () = pf "Done@."
+let () = pf "Please enter a first grammar:@."
+let g1 = CFG.Syntax.from_channel stdin
+let g1 = CFG.FromSyntax.grammar__from__grammar g1
+let pda1 = CFG.to_pda g1
 
-let () = pf "About to debug print CST...@."
-let () = CFG.Syntax.CST.pp_grammar Format.std_formatter cst
-let () = pf "@.Done@."
+let () = pf "Please enter a second grammar:@."
+let g2 = CFG.Syntax.from_channel stdin
+let g2 = CFG.FromSyntax.grammar__from__grammar g2
+let pda2 = CFG.to_pda g2
 
-let () = pf "About to convert to AST... @?"
-let ast = CFG.FromSyntax.grammar__from__grammar cst
-let () = pf "done@."
+let alphabet =
+  CFG.AST.terminals_from_grammar g1 @ CFG.AST.terminals_from_grammar g2
+  |> List.sort_uniq compare
 
-let () = pf "About to debug print AST...@."
-let () = CFG.AST.pp_grammar Format.std_formatter ast
-let () = pf "@.Done@."
+let () = pf "Alphabet has %d letters: %s.@." (List.length alphabet) (String.concat ", " alphabet)
 
-let () = pf "About to print terminals and nonterminals...@."
-let terminals = CFG.AST.terminals_from_grammar ast
-let nonterminals = CFG.AST.nonterminals_from_grammar ast
-let () = Format.(pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt " ") pp_print_string) Format.std_formatter terminals
-let () = pf "@."
-let () = Format.(pp_print_list ~pp_sep:(fun fmt () -> fprintf fmt " ") pp_print_string) Format.std_formatter nonterminals
-let () = pf "@.Done@."
+exception NotEquivalent of string
 
-let () = pf "Replacing terminals by non-terminals... @?"
-let ast' = CFG.replace_late_terminals ast
-let () = pf "done@."
+type word = string list [@@deriving show { with_path = false } ]
 
-let () = pf "About to debug print AST...@."
-let () = CFG.AST.pp_grammar Format.std_formatter ast'
-let () = pf "@.Done@."
+let test_all_words () =
+  let not_equivalent first second word =
+    raise (NotEquivalent (Format.(
+        asprintf "The %s grammar accepts \"%a\" but the %s does not."
+          first pp_word word second
+      )))
+  in
+  let rec test_all_words length words =
+    pf "\rTrying words of length %d... @?" length;
+    let next_words =
+      List.concat_map
+        (fun word ->
+           match PDA.accepts pda1 word, PDA.accepts pda2 word with
+           | true, true | false, false -> List.map (fun a -> a :: word) alphabet
+           | true, false -> not_equivalent "first" "second" word
+           | false, true -> not_equivalent "second" "first" word)
+        words
+    in
+    test_all_words (length + 1) next_words
+  in
+  try
+    test_all_words 0 [[]]
+  with
+    NotEquivalent msg -> pf "@.%s" msg
 
-let () = pf "About to print grammar...@."
-let () = CFG.Syntax.Printer.pp_grammar Format.std_formatter cst
-let () = pf "Done@."
-
-let () = pf "About to compile to PDA... @?"
-let pda = CFG.to_pda ast'
-let () = pf "done@."
-
-let () = pf "About to debug print PDA...@."
-let () = PDA.pp Format.std_formatter pda
-let () = pf "@.Done@."
-
-let () =
-  if PDA.accepts pda ["a"; "a"] then
-    pf "PDA accepts 'aa'@."
-  else
-    pf "PDA does not accept 'aa'@."
+let () = test_all_words ()
