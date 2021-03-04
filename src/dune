@@ -1,4 +1,6 @@
 (executable
  (name toytomata)
  (public_name toytomata)
- (libraries toytomata.cfg))
+ (libraries
+  toytomata.cfg
+  toytomata.pda))
