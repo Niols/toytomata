@@ -1,0 +1,9 @@
+/_build
+/bin
+/doc
+/lib
+/*.opam
+*.merlin
+
+*~
+*#

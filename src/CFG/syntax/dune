@@ -1,0 +1,7 @@
+(ocamllex lexer)
+(menhir (modules parser))
+
+(library
+ (name CFGSyntax)
+ (public_name toytomata.cfg.syntax)
+ (preprocess (pps ppx_deriving.std)))

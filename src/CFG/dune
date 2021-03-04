@@ -1,0 +1,5 @@
+(library
+ (name CFG)
+ (public_name toytomata.cfg)
+ (libraries toytomata.cfg.syntax)
+ (preprocess (pps ppx_deriving.std)))
