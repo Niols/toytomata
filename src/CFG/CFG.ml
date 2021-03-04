@@ -1,38 +1,50 @@
 module Syntax = CFGSyntax
 module AST = AST
 module FromSyntax = FromSyntax
+module ToSyntax = ToSyntax
 
 open AST
 
 let fresh_nonterminal =
   let counter = ref 0 in
-  fun () -> "X" ^ string_of_int !counter
+  fun () ->
+    incr counter;
+    "X" ^ string_of_int !counter
 
-let replace_late_terminals_in_case case =
-  let (_, case, extra_rules) =
+let replace_late_terminals_in_case replacements case =
+  let (_, case, replacements) =
     List.fold_left
-      (fun (seen_nonterminal, case, extra_rules) a_or_v ->
+      (fun (seen_nonterminal, case, replacements) a_or_v ->
          match a_or_v with
          | Terminal a when seen_nonterminal ->
-           let xa = fresh_nonterminal () in
-           (true, NonTerminal xa :: case, {lhs=xa; rhs=[Terminal a]} :: extra_rules)
+           (
+             match List.assoc_opt a replacements with
+             | None ->
+               let v = fresh_nonterminal () in
+               (true, NonTerminal v :: case, (a, v) :: replacements)
+             | Some v ->
+               (true, NonTerminal v :: case, replacements)
+           )
          | Terminal a ->
-           (false, Terminal a :: case, extra_rules)
+           (false, Terminal a :: case, replacements)
          | NonTerminal v ->
-           (true, NonTerminal v :: case, extra_rules))
-      (false, [], [])
+           (true, NonTerminal v :: case, replacements))
+      (false, [], replacements)
       case
   in
-  (List.rev case, extra_rules)
+  (List.rev case, replacements)
 
 let replace_late_terminals grammar =
-  let rules =
+  let (rules, replacements) =
     List.fold_left
-      (fun rules rule ->
-         let (rhs, extra_rules) = replace_late_terminals_in_case rule.rhs in
-         { rule with rhs } :: (extra_rules @ rules))
-      []
+      (fun (rules, replacements) rule ->
+         let (rhs, replacements) = replace_late_terminals_in_case replacements rule.rhs in
+         ({ rule with rhs } :: rules, replacements))
+      ([], [])
       grammar.rules
+  in
+  let rules =
+    rules @ List.map (fun (a, v) -> { lhs = v; rhs = [Terminal a] }) replacements
   in
   { grammar with rules }
 
