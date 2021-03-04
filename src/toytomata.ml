@@ -35,3 +35,17 @@ let () = pf "@.Done@."
 let () = pf "About to print grammar...@."
 let () = CFG.Syntax.Printer.pp_grammar Format.std_formatter cst
 let () = pf "Done@."
+
+let () = pf "About to compile to PDA... @?"
+let pda = CFG.to_pda ast'
+let () = pf "done@."
+
+let () = pf "About to debug print PDA...@."
+let () = PDA.pp Format.std_formatter pda
+let () = pf "@.Done@."
+
+let () =
+  if PDA.accepts pda ["a"; "a"] then
+    pf "PDA accepts 'aa'@."
+  else
+    pf "PDA does not accept 'aa'@."

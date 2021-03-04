@@ -2,12 +2,13 @@ module Syntax = CFGSyntax
 module AST = AST
 module FromSyntax = FromSyntax
 
+open AST
+
 let fresh_nonterminal =
   let counter = ref 0 in
   fun () -> "X" ^ string_of_int !counter
 
 let replace_late_terminals_in_case case =
-  let open AST in
   let (_, case, extra_rules) =
     List.fold_left
       (fun (seen_nonterminal, case, extra_rules) a_or_v ->
@@ -25,7 +26,6 @@ let replace_late_terminals_in_case case =
   (List.rev case, extra_rules)
 
 let replace_late_terminals grammar =
-  let open AST in
   let rules =
     List.fold_left
       (fun rules rule ->
@@ -36,29 +36,35 @@ let replace_late_terminals grammar =
   in
   { grammar with rules }
 
-(* type terminal_or_nonterminal =
- *   | Terminal of terminal
- *   | NonTerminal of nonterminal
- * [@@deriving show { with_path = false } ]
- *
- * type rule =
- *   { lhs : nonterminal ;
- *     rhs : terminal_or_nonterminal list }
- * [@@deriving show { with_path = false } ]
- *
- * type grammar =
- *   { start : nonterminal ;
- *     rules : rule list }
- * [@@deriving show { with_path = false } ]
- *
- *
- * let to_pda cfg =
- *
- *
- * fresh_state
- *
- *     make_trivial
- *
- *     add_final
- *
- *     add_transition *)
+let to_pda cfg =
+  let q0 = PDA.fresh_state () in
+  let pda = PDA.make_trivial q0 in
+  let q1 = PDA.fresh_state () in
+  let pda = PDA.add_final pda q1 in
+  let pda = PDA.add_transition pda (q0, None, None) (q1, Some cfg.start) in
+  let pda =
+    List.fold_left
+      (fun pda rule ->
+         let q = PDA.fresh_state () in
+         let pda = PDA.add_transition pda (q1, None, Some rule.lhs) (q, None) in
+         let (pda, q) =
+           List.fold_left
+             (fun (pda, q) a_or_v ->
+                match a_or_v with
+                | Terminal a ->
+                  let q' = PDA.fresh_state () in
+                  let pda = PDA.add_transition pda (q, Some a, None) (q', None) in
+                  (pda, q')
+                | NonTerminal v ->
+                  let q' = PDA.fresh_state () in
+                  let pda = PDA.add_transition pda (q, None, None) (q', Some v) in
+                  (pda, q'))
+             (pda, q)
+             rule.rhs
+         in
+         let pda = PDA.add_transition pda (q, None, None) (q1, None) in
+         pda)
+      pda
+      cfg.rules
+  in
+  pda

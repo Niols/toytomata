@@ -1,64 +1,68 @@
-type state = string
-type letter = string
-type stack_letter = string
+type state = string        [@@deriving show { with_path = false } ]
+type letter = string       [@@deriving show { with_path = false } ]
+type stack_letter = string [@@deriving show { with_path = false } ]
 
 type t =
   { initial : state ;
     finals : state list ;
     transitions : ((state * letter option * stack_letter option) * (state * stack_letter option)) list }
+[@@deriving show { with_path = false } ]
 
-type word = letter list
-type stack = stack_letter list
+type word = letter list        [@@deriving show { with_path = false } ]
+type stack = stack_letter list [@@deriving show { with_path = false } ]
 
 let stack_pop = function
   | [] -> None
   | e :: q -> Some (e, q)
 
-type configuration = state * word * stack
+type configuration = state * word * stack [@@deriving show { with_path = false } ]
 
 let push_maybe stack = function
   | None -> stack
   | Some stack_letter -> stack_letter :: stack
 
 let one_step pda (state, word, stack) =
-  match word with
-  | [] -> assert false
-  | letter :: word ->
-    List.concat_map
-      (fun ((state', letter', stack_letter'), (new_state', push_letter')) ->
-         try
-           assert (state = state');
-           let new_word =
-             match letter' with
-             | None -> letter :: word
-             | Some letter' when letter = letter' -> word
-             | _ -> assert false
-           in
-           match stack_letter', stack_pop stack with
-           | None, _ ->
-             [(new_state', new_word, push_maybe stack push_letter')]
+  List.concat_map
+    (fun ((state', letter', stack_letter'), (new_state', push_letter')) ->
+       try
+         assert (state = state');
+         let new_word =
+           match letter', word with
+           | None, word -> word
+           | Some letter', letter :: word when letter = letter' -> word
+           | _ -> assert false
+         in
+         match stack_letter', stack_pop stack with
+         | None, _ ->
+           [(new_state', new_word, push_maybe stack push_letter')]
 
-           | Some stack_letter', Some (stack_top, stack) when stack_letter' = stack_top ->
-             [(new_state', new_word, push_maybe stack push_letter')]
+         | Some stack_letter', Some (stack_top, stack) when stack_letter' = stack_top ->
+           [(new_state', new_word, push_maybe stack push_letter')]
 
-           | _ ->
-             []
-         with
-           Assert_failure _ -> [])
-      pda.transitions
+         | _ ->
+           []
+       with
+         Assert_failure _ -> [])
+    pda.transitions
 
-let rec all_steps pda (state, word, stack) =
-  if word = [] then
-    [(state, word, stack)]
+let rec all_steps n pda ((state, word, _) as conf) =
+  Format.eprintf "%s%a" (String.make (2*n) ' ') pp_configuration conf;
+  if word = [] && List.mem state pda.finals then
+    (
+      Format.eprintf " <-- returned@.";
+      [conf]
+    )
   else
-    one_step pda (state, word, stack)
-    |> List.concat_map (all_steps pda)
+    (
+      Format.eprintf "@.";
+      one_step pda conf
+      |> List.concat_map (all_steps (n+1) pda)
+    )
 
 let accepts pda word =
-  all_steps pda (pda.initial, word, [])
-  |> List.exists
-    (fun (state, _word, stack) ->
-       stack = [] && List.mem state pda.finals)
+  let res = all_steps 0 pda (pda.initial, word, []) in
+  Format.eprintf "Result #: %d@." (List.length res);
+  res <> []
 
 let fresh_state =
   let counter = ref 0 in
