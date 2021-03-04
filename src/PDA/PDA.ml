@@ -3,12 +3,9 @@ type letter = string
 type stack_letter = string
 
 type t =
-  { states : state list ;
-    alphabet : letter list ;
-    initial : state ;
+  { initial : state ;
     finals : state list ;
-    stack_alphabet : stack_letter list ;
-    transitions : ((state * letter option * stack_letter option) * (state * stack_letter option) list) list }
+    transitions : ((state * letter option * stack_letter option) * (state * stack_letter option)) list }
 
 type word = letter list
 type stack = stack_letter list
@@ -28,7 +25,7 @@ let one_step pda (state, word, stack) =
   | [] -> assert false
   | letter :: word ->
     List.concat_map
-      (fun ((state', letter', stack_letter'), outputs') ->
+      (fun ((state', letter', stack_letter'), (new_state', push_letter')) ->
          try
            assert (state = state');
            let new_word =
@@ -39,16 +36,10 @@ let one_step pda (state, word, stack) =
            in
            match stack_letter', stack_pop stack with
            | None, _ ->
-             List.map
-               (fun (new_state', push_letter') ->
-                  (new_state', new_word, push_maybe stack push_letter'))
-               outputs'
+             [(new_state', new_word, push_maybe stack push_letter')]
 
            | Some stack_letter', Some (stack_top, stack) when stack_letter' = stack_top ->
-             List.map
-               (fun (new_state', push_letter') ->
-                  (new_state', new_word, push_maybe stack push_letter'))
-               outputs'
+             [(new_state', new_word, push_maybe stack push_letter')]
 
            | _ ->
              []
@@ -68,3 +59,18 @@ let accepts pda word =
   |> List.exists
     (fun (state, _word, stack) ->
        stack = [] && List.mem state pda.finals)
+
+let fresh_state =
+  let counter = ref 0 in
+  fun () ->
+    incr counter;
+    "q" ^ string_of_int !counter
+
+let make_trivial state =
+  { initial = state ; finals = [] ; transitions = [] }
+
+let add_final pda state =
+  { pda with finals = state :: pda.finals }
+
+let add_transition pda from_ to_ =
+  { pda with transitions = (from_, to_) :: pda.transitions }
