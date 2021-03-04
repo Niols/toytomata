@@ -48,18 +48,17 @@ let replace_late_terminals grammar =
   in
   { grammar with rules }
 
-let rec rhs_to_pda pda from_state = function
-  | [] -> (pda, from_state)
+let rec rhs_to_pda pda ~from_ ~to_ = function
+  | [] -> PDA.add_transition pda (from_, None, None) (to_, None)
   | a_or_v :: rhs ->
+    let q' = PDA.fresh_state () in
     match a_or_v with
     | Terminal a ->
-      let q' = PDA.fresh_state () in
-      let pda = PDA.add_transition pda (from_state, Some a, None) (q', None) in
-      rhs_to_pda pda q' rhs
+      let pda = PDA.add_transition pda (from_, Some a, None) (q', None) in
+      rhs_to_pda pda ~from_:q' ~to_ rhs
     | NonTerminal v ->
-      let q' = PDA.fresh_state () in
-      let pda = PDA.add_transition pda (from_state, None, None) (q', Some v) in
-      rhs_to_pda pda q' rhs
+      let pda = PDA.add_transition pda (from_, None, None) (q', Some v) in
+      rhs_to_pda pda ~from_:q' ~to_ rhs
 
 let to_pda cfg =
   let q0 = PDA.fresh_state () in
@@ -72,9 +71,7 @@ let to_pda cfg =
       (fun pda rule ->
          let q = PDA.fresh_state () in
          let pda = PDA.add_transition pda (q1, None, Some rule.lhs) (q, None) in
-         let (pda, q) = rhs_to_pda pda q rule.rhs in
-         let pda = PDA.add_transition pda (q, None, None) (q1, None) in
-         pda)
+         rhs_to_pda pda ~from_:q ~to_:q1 rule.rhs)
       pda
       cfg.rules
   in
