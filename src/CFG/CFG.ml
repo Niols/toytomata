@@ -48,17 +48,45 @@ let replace_late_terminals grammar =
   in
   { grammar with rules }
 
-let rec rhs_to_pda pda ~from_ ~to_ = function
-  | [] -> PDA.add_transition pda (from_, None, None) (to_, None)
-  | a_or_v :: rhs ->
-    let q' = PDA.fresh_state () in
-    match a_or_v with
-    | Terminal a ->
-      let pda = PDA.add_transition pda (from_, Some a, None) (q', None) in
+type terminal_and_or_nonterminal =
+  | OnlyTerminal of terminal
+  | OnlyNonTerminal of nonterminal
+  | Both of terminal * nonterminal
+
+let regroup_rhs rhs =
+  let (terminals, nonterminals) =
+    List.partition (function Terminal _ -> true | _ -> false) rhs
+  in
+  let terminals = List.map (function Terminal a -> a | _ -> assert false) terminals in
+  let nonterminals = List.map (function NonTerminal v -> v | _ -> assert false) nonterminals in
+  let rec regroup group terminals nonterminals =
+    match terminals, nonterminals with
+    | [], nonterminals -> List.rev_append group (List.map (fun v -> OnlyNonTerminal v) nonterminals)
+    | terminals, [] -> List.rev_append group (List.map (fun a -> OnlyTerminal a) terminals)
+    | a::terminals, v::nonterminals -> regroup (Both (a, v) :: group) terminals nonterminals
+  in
+  regroup [] terminals nonterminals
+
+let rec rhs_to_pda pda ?pop ~from_ ~to_ = function
+  | [] -> PDA.add_transition pda (from_, None, pop) (to_, None)
+  | [one] ->
+    (
+      match one with
+      | OnlyTerminal a -> PDA.add_transition pda (from_, Some a, pop) (to_, None)
+      | OnlyNonTerminal v -> PDA.add_transition pda (from_, None, pop) (to_, Some v)
+      | Both (a, v) -> PDA.add_transition pda (from_, Some a, pop) (to_, Some v)
+    )
+  | one :: rhs ->
+    (
+      let q' = PDA.fresh_state () in
+      let pda =
+        match one with
+        | OnlyTerminal a -> PDA.add_transition pda (from_, Some a, pop) (q', None)
+        | OnlyNonTerminal v -> PDA.add_transition pda (from_, None, pop) (q', Some v)
+        | Both (a, v) -> PDA.add_transition pda (from_, Some a, pop) (q', Some v)
+      in
       rhs_to_pda pda ~from_:q' ~to_ rhs
-    | NonTerminal v ->
-      let pda = PDA.add_transition pda (from_, None, None) (q', Some v) in
-      rhs_to_pda pda ~from_:q' ~to_ rhs
+    )
 
 let to_pda cfg =
   let q0 = PDA.fresh_state () in
@@ -69,9 +97,7 @@ let to_pda cfg =
   let pda =
     List.fold_left
       (fun pda rule ->
-         let q = PDA.fresh_state () in
-         let pda = PDA.add_transition pda (q1, None, Some rule.lhs) (q, None) in
-         rhs_to_pda pda ~from_:q ~to_:q1 rule.rhs)
+         rhs_to_pda pda ~pop:rule.lhs ~from_:q1 ~to_:q1 (regroup_rhs rule.rhs))
       pda
       cfg.rules
   in
