@@ -1,16 +1,13 @@
+open Common
 open AST
-
-let stack_pop = function
-  | [] -> None
-  | e :: q -> Some (e, q)
 
 let push_maybe stack = function
   | None -> stack
-  | Some stack_letter -> stack_letter :: stack
+  | Some symbol -> Stack.push symbol stack
 
-let one_step pda (state, word, stack) =
+let one_step (pda : pda) ((state, word, stack) : configuration) =
   List.concat_map
-    (fun ((state', letter', stack_letter'), (new_state', push_letter')) ->
+    (fun ((state', letter', symbol'), (new_state', push_symbol')) ->
        try
          assert (state = state');
          let new_word =
@@ -19,12 +16,12 @@ let one_step pda (state, word, stack) =
            | Some letter', letter :: word when letter = letter' -> word
            | _ -> assert false
          in
-         match stack_letter', stack_pop stack with
+         match symbol', Stack.pop_opt stack with
          | None, _ ->
-           [(new_state', new_word, push_maybe stack push_letter')]
+           [(new_state', new_word, push_maybe stack push_symbol')]
 
-         | Some stack_letter', Some (stack_top, stack) when stack_letter' = stack_top ->
-           [(new_state', new_word, push_maybe stack push_letter')]
+         | Some symbol', Some (stack_top, stack) when symbol' = stack_top ->
+           [(new_state', new_word, push_maybe stack push_symbol')]
 
          | _ ->
            []
@@ -33,14 +30,14 @@ let one_step pda (state, word, stack) =
     pda.transitions
 
 let rec all_steps pda ((state, word, stack) as conf) =
-  if word = [] && List.mem state pda.finals && stack = [] then
+  if word = [] && List.mem state pda.finals && Stack.is_empty stack then
     [conf]
   else
     one_step pda conf
     |> List.concat_map (all_steps pda)
 
 let accepts pda word =
-  all_steps pda (pda.initial, word, []) <> []
+  all_steps pda (pda.initial, word, Stack.empty) <> []
 
 let fresh_state =
   let counter = ref 0 in
