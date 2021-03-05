@@ -3,7 +3,7 @@ module Parser = Parser
 module CST = CST
 module Printer = Printer
 
-let from_lexbuf = Parser.grammar Lexer.read
+let from_lexbuf = Parser.entrypoint Lexer.read
 
 let from_channel ichan = from_lexbuf (Lexing.from_channel ichan)
 let from_string str = from_lexbuf (Lexing.from_string str)

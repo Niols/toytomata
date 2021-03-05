@@ -1,22 +1,19 @@
 type terminal = string
-[@@deriving show { with_path = false } ]
 
-type nonterminal = string
-[@@deriving show { with_path = false } ]
+and nonterminal = string
 
-type terminal_or_nonterminal =
+and terminal_or_nonterminal =
   | Terminal of terminal
   | NonTerminal of nonterminal
-[@@deriving show { with_path = false } ]
 
-type rule =
+and rule =
   { lhs : nonterminal ;
     rhs : terminal_or_nonterminal list }
-[@@deriving show { with_path = false } ]
 
-type grammar =
+and grammar =
   { start : nonterminal ;
     rules : rule list }
+
 [@@deriving show { with_path = false } ]
 
 val terminals_from_grammar : grammar -> terminal list

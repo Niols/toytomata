@@ -5,7 +5,7 @@ let () = pf "Please enter a first grammar:@."
 
 let g1 =
   CFG.Syntax.from_channel stdin
-  |> CFG.FromSyntax.grammar__from__grammar
+  |> CFG.FromSyntax.grammar__from__grammar'
 
 let g1 = CFG.replace_late_terminals g1
 
@@ -23,7 +23,7 @@ let () = pf "@\nPlease enter a second grammar:@."
 
 let g2 =
   CFG.Syntax.from_channel stdin
-  |> CFG.FromSyntax.grammar__from__grammar
+  |> CFG.FromSyntax.grammar__from__grammar'
 
 let g2 = CFG.replace_late_terminals g2
 

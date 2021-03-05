@@ -1,3 +1,5 @@
+%{ open Common %}
+
 %token <string> TERMINAL
 %token <string> NONTERMINAL
 %token EMPTYWORD
@@ -11,28 +13,35 @@
 
 %token EOF
 
-%start <CST.grammar> grammar
+%start <CST.grammar'> entrypoint
 %%
 
+entrypoint: g=located(grammar) EOF { g }
+
 grammar:
-| rules=list(terminated_rule) EOF { rules }
+| rules=list(terminated_rule) { rules }
 ;;
 
 terminated_rule:
-| r=rule SEMICOLON { r }
+| r=located(rule) SEMICOLON { r }
 ;;
 
 rule:
-| START vs=separated_nonempty_list(COMMA, NONTERMINAL)                 { CST.Start vs }
-| v=NONTERMINAL RIGHTARROW
-      cases=separated_nonempty_list(PIPE, production_case) { CST.Production (v, cases) }
+| START vs=separated_nonempty_list(COMMA, located(NONTERMINAL))
+  { CST.Start vs }
+
+| v=located(NONTERMINAL) RIGHTARROW
+      cases=separated_nonempty_list(PIPE, located(production_case))
+  { CST.Production (v, cases) }
 ;;
 
 terminal_or_nonterminal:
-| t=TERMINAL    { CST.Terminal t }
-| v=NONTERMINAL { CST.NonTerminal v }
+| t=located(TERMINAL)    { CST.Terminal t }
+| v=located(NONTERMINAL) { CST.NonTerminal v }
 
 production_case:
 | EMPTYWORD     { [] }
-| case=nonempty_list(terminal_or_nonterminal) { case }
+| case=nonempty_list(located(terminal_or_nonterminal)) { case }
 ;;
+
+%inline located(X): x=X { STHelper.with_positions $startpos $endpos x }

@@ -4,4 +4,5 @@
 (library
  (name CFGSyntax)
  (public_name toytomata.cfg.syntax)
+ (libraries toytomata.common)
  (preprocess (pps ppx_deriving.std)))
