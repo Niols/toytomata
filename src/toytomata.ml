@@ -3,10 +3,7 @@ let stdfmt = Format.std_formatter
 
 let () = pf "Please enter a first grammar:@."
 
-let g1 =
-  CFG.Syntax.from_channel stdin
-  |> CFG.FromSyntax.grammar__from__grammar'
-
+let g1 = CFG.from_channel stdin
 let g1 = CFG.replace_late_terminals g1
 
 (* let () =
@@ -21,9 +18,7 @@ let pda1 = CFG.to_pda g1
 
 let () = pf "@\nPlease enter a second grammar:@."
 
-let g2 =
-  CFG.Syntax.from_channel stdin
-  |> CFG.FromSyntax.grammar__from__grammar'
+let g2 = CFG.from_channel stdin
 
 let g2 = CFG.replace_late_terminals g2
 
@@ -38,7 +33,7 @@ let pda2 = CFG.to_pda g2
 (* let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g2 PDA.pp pda2 *)
 
 let alphabet =
-  CFG.AST.terminals_from_grammar g1 @ CFG.AST.terminals_from_grammar g2
+  CFG.terminals_from_grammar g1 @ CFG.terminals_from_grammar g2
   |> List.sort_uniq compare
 
 let () = pf "@\nAlphabet has %d letters: %s.@." (List.length alphabet) (String.concat ", " alphabet)

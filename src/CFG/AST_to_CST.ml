@@ -1,6 +1,5 @@
 open Common
 open AST
-open CFGSyntax
 
 let terminal_or_nonterminal__to__terminal_or_nonterminal = function
   | Terminal a -> CST.Terminal (STHelper.dummily a)
