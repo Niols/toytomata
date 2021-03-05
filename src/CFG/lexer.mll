@@ -1,7 +1,5 @@
 {
   open Parser
-
-  exception SyntaxError of string
 }
 
 let terminal = ['a'-'z'] ['0'-'9']*
@@ -26,6 +24,7 @@ rule read = parse
 
   | eof  { EOF }
 
-  | _    { raise (SyntaxError ("Unexpected character: " ^ (Lexing.lexeme lexbuf))) }
+  | _    { Common.STHelper.syntax_error "Unexpected character: %s" (Lexing.lexeme lexbuf) }
 
 (* FIXME: brackets for longer states*)
+(* FIXME: pos in syntax_error *)

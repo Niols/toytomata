@@ -62,3 +62,23 @@ let value x = x.value
 
 let map_located f x = { x with value = f x.value }
 let map_ignore_located f x = f x.value
+
+exception SyntaxError of position * string
+
+let syntax_error ?start_pos ?end_pos ?pos =
+  let pos =
+    match start_pos, end_pos, pos with
+    | None, None, None -> dummy_position
+    | None, None, Some pos -> pos
+    | Some start_p, Some end_p, None -> { start_p ; end_p }
+    | _ -> failwith "CSTHelpers.syntax_error"
+  in
+  Format.kasprintf (fun str -> raise (SyntaxError (pos, str)))
+
+let catch_syntax_error f x =
+  try
+    f x
+  with
+    SyntaxError (pos, str) ->
+    Format.eprintf "%a:@\nError: %s" pp_position pos str;
+    exit 1

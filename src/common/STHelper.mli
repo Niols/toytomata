@@ -23,3 +23,12 @@ val pp_ignore_located : (Format.formatter -> 'a -> unit) -> Format.formatter -> 
 (** When [pp] is a printer for values of type ['a], [pp_ignore_located pp] is
    the printer for values of type ['a located] that ignores locations and simply
    call [pp] on the value. *)
+
+exception SyntaxError of position * string
+
+val syntax_error :
+  ?start_pos:Lexing.position -> ?end_pos:Lexing.position ->
+  ?pos:position ->
+  ('a, Format.formatter, unit, 'b) format4 -> 'a
+
+val catch_syntax_error : ('a -> 'b) -> 'a -> 'b
