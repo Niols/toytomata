@@ -24,7 +24,7 @@ rule read = parse
 
   | eof  { EOF }
 
-  | _    { Common.STHelper.syntax_error "Unexpected character: %s" (Lexing.lexeme lexbuf) }
+  | _    { Common.CSTHelpers.syntax_error "Unexpected character: %s" (Lexing.lexeme lexbuf) }
 
 (* FIXME: brackets for longer states*)
 (* FIXME: pos in syntax_error *)

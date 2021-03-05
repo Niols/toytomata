@@ -44,4 +44,4 @@ production_case:
 | case=nonempty_list(located(terminal_or_nonterminal)) { case }
 ;;
 
-%inline located(X): x=X { STHelper.with_positions $startpos $endpos x }
+%inline located(X): x=X { CSTHelpers.with_positions $startpos $endpos x }

@@ -3,7 +3,7 @@ let fpf = fprintf
 
 open CST
 
-let pp_located = Common.STHelper.pp_ignore_located
+let pp_located = Common.CSTHelpers.pp_ignore_located
 
 let pp_constant c = fun fmt () -> fpf fmt c
 

@@ -1,4 +1,4 @@
 module Stack = Stack
-module STHelper = STHelper
+module CSTHelpers = CSTHelpers
 
 type 'a stack = 'a Stack.t
