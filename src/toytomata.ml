@@ -2,11 +2,8 @@ let pf = Format.printf
 let stdfmt = Format.std_formatter
 
 let () = pf "Please enter an automaton:@."
-let pda1 = PDA.cst_from_channel stdin
-let () = pf "@\nYou have entered:@."
-let () = PDA.cst_to_channel stdout pda1
-let () = pf "@."
-let pda1 = PDA__.CST_to_AST.pda'__to__pda pda1
+let pda1 = PDA.from_channel stdin
+let () = pf "@\nYou have entered:@\n%a@." PDA.pp pda1
 
 (* let () = pf "Please enter a first grammar:@."
  *
@@ -36,6 +33,8 @@ let g2 = CFG.replace_late_terminals g2
  *   |> CFG.Syntax.Printer.pp_grammar stdfmt *)
 
 let pda2 = CFG.to_pda g2
+
+let () = pf "@\nCorresponding automaton:@\n%a@." PDA.pp pda2
 
 (* let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g2 PDA.pp pda2 *)
 

@@ -17,7 +17,9 @@ let cst_from_file fname =
   close_in ichan;
   grammar
 
-let cst_to_string = Format.asprintf "%a" Printer.pp_grammar
+let pp_cst = Printer.pp_grammar
+
+let cst_to_string = Format.asprintf "%a" pp_cst
 
 let cst_to_channel ochan grammar =
   let fmt = Format.formatter_of_out_channel ochan in
@@ -28,15 +30,19 @@ let cst_to_file fname grammar =
   cst_to_channel ochan grammar;
   close_out ochan
 
+let cst_to_ast = CST_to_AST.grammar'__to__grammar
+let ast_to_cst = AST_to_CST.grammar__to__grammar
+
 (** {2 AST Parsing & Printing} *)
 
-let from_channel ichan = cst_from_channel ichan |> CST_to_AST.grammar'__to__grammar
-let from_string str = cst_from_string str |> CST_to_AST.grammar'__to__grammar
-let from_file fname = cst_from_file fname |> CST_to_AST.grammar'__to__grammar
+let from_channel ichan = cst_from_channel ichan |> cst_to_ast
+let from_string str = cst_from_string str |> cst_to_ast
+let from_file fname = cst_from_file fname |> cst_to_ast
 
-let to_channel ochan g = AST_to_CST.grammar__to__grammar g |> cst_to_channel ochan
-let to_string g = AST_to_CST.grammar__to__grammar g |> cst_to_string
-let to_file fname g = AST_to_CST.grammar__to__grammar g |> cst_to_file fname
+let pp fmt g = g |> ast_to_cst |> pp_cst fmt
+let to_channel ochan g = g |> ast_to_cst |> cst_to_channel ochan
+let to_string g = g |> ast_to_cst |> cst_to_string
+let to_file fname g = g |> ast_to_cst |> cst_to_file fname
 
 (** {2 Others} *)
 
@@ -155,6 +161,7 @@ let rec rhs_to_pda pda ?pop ~from_ ~to_ = function
 let to_pda cfg =
   let q0 = PDA.fresh_state () in
   let pda = PDA.empty_pda in
+  let pda = PDA.add_initial pda q0 in
   let q1 = PDA.fresh_state () in
   let pda = PDA.add_final pda q1 in
   let pda = PDA.add_transition pda q0 q1 (None, None, Some cfg.start) in
