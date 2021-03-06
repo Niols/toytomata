@@ -1,8 +1,8 @@
 open Common
-open AST
 
 (** {2 AST} *)
 
+include AST
 type t = AST.pda
 
 (** {2 CST Parsing & Printing} *)
@@ -29,7 +29,22 @@ let cst_to_file fname pda =
   cst_to_channel ochan pda;
   close_out ochan
 
+(** {2 AST Parsing & Printing} *)
+
+let from_channel ichan = cst_from_channel ichan |> CST_to_AST.pda'__to__pda
+let from_string str = cst_from_string str |> CST_to_AST.pda'__to__pda
+let from_file fname = cst_from_file fname |> CST_to_AST.pda'__to__pda
+
+(* let to_channel ochan g = AST_to_CST.pda__to__pda' g |> cst_to_channel ochan
+ * let to_string g = AST_to_CST.pda__to__pda' g |> cst_to_string
+ * let to_file fname g = AST_to_CST.pda__to__pda' g |> cst_to_file fname *)
+
 (** {2 Rest} *)
+
+let alphabet pda =
+  pda.transitions
+  |> List.filter_map (fun ((_, lo, _), (_, _)) -> lo)
+  |> List.sort_uniq compare
 
 let push_maybe stack = function
   | None -> stack
@@ -67,19 +82,4 @@ let rec all_steps pda ((state, word, stack) as conf) =
     |> List.concat_map (all_steps pda)
 
 let accepts pda word =
-  all_steps pda (pda.initial, word, Stack.empty) <> []
-
-let fresh_state =
-  let counter = ref 0 in
-  fun () ->
-    incr counter;
-    "q" ^ string_of_int !counter
-
-let make_trivial state =
-  { initial = state ; finals = [] ; transitions = [] }
-
-let add_final pda state =
-  { pda with finals = state :: pda.finals }
-
-let add_transition pda from_ to_ =
-  { pda with transitions = (from_, to_) :: pda.transitions }
+  List.concat_map (all_steps pda) (List.map (fun q -> (q, word, Stack.empty)) pda.initials) <> []

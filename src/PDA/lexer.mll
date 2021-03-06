@@ -19,8 +19,8 @@ rule read = parse
   | "via" { VIA }
   | "or"  { OR }
 
-  | alphanum      { OBJECT (Lexing.lexeme lexbuf) }
   | lambda        { EMPTYWORD }
+  | alphanum      { OBJECT (Lexing.lexeme lexbuf) }
 
   | "--" { DDASH }
   | "->" { RIGHTARROW }

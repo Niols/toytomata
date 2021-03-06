@@ -2,22 +2,24 @@ let pf = Format.printf
 let stdfmt = Format.std_formatter
 
 let () = pf "Please enter an automaton:@."
-let p = PDA.cst_from_channel stdin
+let pda1 = PDA.cst_from_channel stdin
 let () = pf "@\nYou have entered:@."
-let () = PDA.cst_to_channel stdout p
+let () = PDA.cst_to_channel stdout pda1
+let () = pf "@."
+let pda1 = PDA__.CST_to_AST.pda'__to__pda pda1
 
-let () = pf "Please enter a first grammar:@."
-
-let g1 = CFG.from_channel stdin
-let g1 = CFG.replace_late_terminals g1
-
-(* let () =
- *   pf "@\nAfter replacing terminals that appear after a non-terminal:@.";
- *   g1
- *   |> CFG.ToSyntax.grammar__to__grammar
- *   |> CFG.Syntax.Printer.pp_grammar stdfmt *)
-
-let pda1 = CFG.to_pda g1
+(* let () = pf "Please enter a first grammar:@."
+ *
+ * let g1 = CFG.from_channel stdin
+ * let g1 = CFG.replace_late_terminals g1
+ *
+ * (\* let () =
+ *  *   pf "@\nAfter replacing terminals that appear after a non-terminal:@.";
+ *  *   g1
+ *  *   |> CFG.ToSyntax.grammar__to__grammar
+ *  *   |> CFG.Syntax.Printer.pp_grammar stdfmt *\)
+ *
+ * let pda1 = CFG.to_pda g1 *)
 
 (* let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g1 PDA.pp pda1 *)
 
@@ -38,8 +40,12 @@ let pda2 = CFG.to_pda g2
 (* let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g2 PDA.pp pda2 *)
 
 let alphabet =
-  CFG.terminals_from_grammar g1 @ CFG.terminals_from_grammar g2
+  PDA.alphabet pda1 @ CFG.terminals_from_grammar g2
   |> List.sort_uniq compare
+
+(* let alphabet =
+ *   CFG.terminals_from_grammar g1 @ CFG.terminals_from_grammar g2
+ *   |> List.sort_uniq compare *)
 
 let () = pf "@\nAlphabet has %d letters: %s.@." (List.length alphabet) (String.concat ", " alphabet)
 
