@@ -1,3 +1,6 @@
+(ocamllex lexer)
+(menhir (modules parser))
+
 (library
  (name PDA)
  (public_name toytomata.pda)

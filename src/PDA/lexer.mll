@@ -12,8 +12,6 @@ let newline = '\r' | '\n' | "\r\n"
 rule read = parse
   | white         { read lexbuf }
   | newline       { Lexing.new_line lexbuf; read lexbuf }
-  | alphanum      { ALPHANUM (Lexing.lexeme lexbuf) }
-  | lambda        { EMPTYWORD }
 
   | "initial" | "initials" { INITIAL }
   | "final" | "finals"     { FINAL }
@@ -21,15 +19,18 @@ rule read = parse
   | "via" { VIA }
   | "or"  { OR }
 
+  | alphanum      { OBJECT (Lexing.lexeme lexbuf) }
+  | lambda        { EMPTYWORD }
+
   | "--" { DDASH }
   | "->" { RIGHTARROW }
-  | '|'  { PIPE }
   | ';'  { SEMICOLON }
   | ','  { COMMA }
+  | '/'  { SLASH }
 
   | eof  { EOF }
 
   | _    { Common.CSTHelpers.syntax_error "Unexpected character: %s" (Lexing.lexeme lexbuf) }
 
-(* FIXME: brackets for longer states*)
+(* FIXME: brackets for longer states *)
 (* FIXME: pos in syntax_error *)

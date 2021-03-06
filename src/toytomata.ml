@@ -1,6 +1,11 @@
 let pf = Format.printf
 let stdfmt = Format.std_formatter
 
+let () = pf "Please enter an automaton:@."
+let p = PDA.cst_from_channel stdin
+let () = pf "@\nYou have entered:@."
+let () = PDA.cst_to_channel stdout p
+
 let () = pf "Please enter a first grammar:@."
 
 let g1 = CFG.from_channel stdin

@@ -1,6 +1,36 @@
 open Common
 open AST
 
+(** {2 AST} *)
+
+type t = AST.pda
+
+(** {2 CST Parsing & Printing} *)
+
+let cst_from_lexbuf = Parser.entrypoint Lexer.read
+
+let cst_from_channel ichan = cst_from_lexbuf (Lexing.from_channel ichan)
+let cst_from_string str = cst_from_lexbuf (Lexing.from_string str)
+
+let cst_from_file fname =
+  let ichan = open_in fname in
+  let pda = cst_from_channel ichan in
+  close_in ichan;
+  pda
+
+let cst_to_string = Format.asprintf "%a" Printer.pp_pda'
+
+let cst_to_channel ochan pda =
+  let fmt = Format.formatter_of_out_channel ochan in
+  Printer.pp_pda' fmt pda
+
+let cst_to_file fname pda =
+  let ochan = open_out fname in
+  cst_to_channel ochan pda;
+  close_out ochan
+
+(** {2 Rest} *)
+
 let push_maybe stack = function
   | None -> stack
   | Some symbol -> Stack.push symbol stack
