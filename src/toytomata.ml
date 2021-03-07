@@ -115,7 +115,7 @@ let pp_word fmt = function
 let nb_printed_words = ref 0
 
 let rec test_all_words length words =
-  pf "\r[%d] (%d) @?" length !nb_printed_words;
+  pf "\r[%d] @?" length;
   let next_words =
     List.concat_map
       (fun word ->
@@ -128,7 +128,13 @@ let rec test_all_words length words =
                if !nb_printed_words < limit_printed_words then
                  (
                    incr nb_printed_words;
-                   pf "%a@\n\r[%d] @?" pp_word word length
+                   pf "%a%s@\n\r[%d] @?"
+                     pp_word word
+                     (if !nb_printed_words = limit_printed_words then
+                        " (last printed one)"
+                      else
+                        "")
+                     length
                  )
              )
            else

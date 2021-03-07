@@ -151,9 +151,9 @@ let rec rhs_to_pda pda ?pop ~from_ ~to_ = function
       let q' = PDA.fresh_state () in
       let pda =
         match one with
-        | OnlyTerminal a -> PDA.add_transition pda from_ to_ (Some a, pop, None)
-        | OnlyNonTerminal v -> PDA.add_transition pda from_ to_ (None, pop, Some v)
-        | Both (a, v) -> PDA.add_transition pda from_ to_ (Some a, pop, Some v)
+        | OnlyTerminal a -> PDA.add_transition pda from_ q' (Some a, pop, None)
+        | OnlyNonTerminal v -> PDA.add_transition pda from_ q' (None, pop, Some v)
+        | Both (a, v) -> PDA.add_transition pda from_ q' (Some a, pop, Some v)
       in
       rhs_to_pda pda ~from_:q' ~to_ rhs
     )
