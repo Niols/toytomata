@@ -1,86 +1,150 @@
-let pf = Format.printf
-let stdfmt = Format.std_formatter
+open Common
 
-let () = pf "Please enter an automaton:@."
-let pda1 = PDA.from_channel stdin
-let () = pf "@\nYou have entered:@\n%a@." PDA.pp pda1
+type kind = PDA | CFG
+type source = FromStdin | FromFile of string | FromString of string
+type input =
+  { mutable kind : kind ;
+    mutable source : source ;
+    mutable source_set : bool }
 
-(* let () = pf "Please enter a first grammar:@."
- *
- * let g1 = CFG.from_channel stdin
- * let g1 = CFG.replace_late_terminals g1
- *
- * (\* let () =
- *  *   pf "@\nAfter replacing terminals that appear after a non-terminal:@.";
- *  *   g1
- *  *   |> CFG.ToSyntax.grammar__to__grammar
- *  *   |> CFG.Syntax.Printer.pp_grammar stdfmt *\)
- *
- * let pda1 = CFG.to_pda g1 *)
+let default_input kind =
+  { kind;
+    source = FromStdin; source_set = false }
 
-(* let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g1 PDA.pp pda1 *)
+let inputs = ref []
+let add_input kind = inputs := (default_input kind) :: !inputs
+let cur_input () = List.hd !inputs
+let all_inputs () = List.rev !inputs
 
-let () = pf "@\nPlease enter a second grammar:@."
+let usage_str =
+  spf "%s KIND [OPTIONS] [KIND [OPTIONS] ...]
 
-let g2 = CFG.from_channel stdin
+KIND can be PDA or CFG.
+OPTIONS can be:" Sys.argv.(0)
 
-let g2 = CFG.replace_late_terminals g2
+let anonymous str =
+  add_input (
+    match String.lowercase_ascii str with
+    | "pda" -> PDA
+    | "cfg" -> CFG
+    | _ -> raise (Arg.Bad (spf "unkown object kind `%s`" str))
+  )
 
-(* let () =
- *   pf "@\nAfter replacing terminals that appear after a non-terminal:@.";
- *   g2
- *   |> CFG.ToSyntax.grammar__to__grammar
- *   |> CFG.Syntax.Printer.pp_grammar stdfmt *)
+let set_source source =
+  let input = cur_input () in
+  if input.source_set then
+    raise (Arg.Bad (spf "source already set"));
+  input.source <- source;
+  input.source_set <- true
 
-let pda2 = CFG.to_pda g2
+let set_source_from_file fname = set_source (FromFile fname)
+let set_source_from_string str = set_source (FromString str)
+let set_source_from_stdin () = set_source FromStdin
 
-let () = pf "@\nCorresponding automaton:@\n%a@." PDA.pp pda2
+let spec =
+  Arg.[
+    "--from-file",   String set_source_from_file,  "FILE Gets input from given file";
+    "-f",            String set_source_from_file,  "FILE Short for --from-file";
+    "--from-string", String set_source_from_string, "STR Gets input from given string";
+    "-s",            String set_source_from_string, "STR Short for --from-string";
+    "--from-stdin",  Unit   set_source_from_stdin,     " Gets input from stdin (default)";
+  ] |> Arg.align
 
-(* let () = pf "@\nAST:@\n%a@\n@\nPDA:@\n%a@\n@\n" CFG.AST.pp_grammar g2 PDA.pp pda2 *)
+let () =
+  Arg.parse spec anonymous usage_str
+
+let pdas =
+  all_inputs () |> List.mapi @@ fun i input ->
+  pf "@\nPDA #%d:@." (i + 1);
+  match input.kind with
+  | PDA ->
+    (
+      match input.source with
+      | FromFile fname ->
+        pf "Reading from file \"%s\".@." fname;
+        PDA.from_file fname
+      | FromString str ->
+        pf "Reading from string \"%s\".@." str;
+        PDA.from_string str
+      | FromStdin ->
+        pf "Please enter a PDA (end it with Ctrl+D):@.";
+        PDA.from_channel stdin
+    )
+  | CFG ->
+    (
+      pf "Getting a CFG and converting it later.@.";
+      let cfg =
+        match input.source with
+        | FromFile fname ->
+          pf "Reading from file \"%s\".@." fname;
+          CFG.from_file fname
+        | FromString str ->
+          pf "Reading from string \"%s\".@." str;
+          CFG.from_string str
+        | FromStdin ->
+          pf "Please enter a CFG (end it with Ctrl+D):@.";
+          CFG.from_channel stdin
+      in
+      let cfg = CFG.replace_late_terminals cfg in
+      let pda = CFG.to_pda cfg in
+      pf "I have converted it to the following PDA:@\n%a@?" PDA.pp pda;
+      pda
+    )
+
+let () = pf "@\nI have got %d PDAs to work with.@." (List.length pdas)
 
 let alphabet =
-  PDA.alphabet pda1 @ CFG.terminals_from_grammar g2
+  List.fold_left (fun alphabet pda -> PDA.alphabet pda @ alphabet) [] pdas
   |> List.sort_uniq compare
 
-(* let alphabet =
- *   CFG.terminals_from_grammar g1 @ CFG.terminals_from_grammar g2
- *   |> List.sort_uniq compare *)
+let () = pf "Their smallest common alphabet has %d letters and is: %s.@."
+    (List.length alphabet) (String.concat ", " alphabet)
 
-let () = pf "@\nAlphabet has %d letters: %s.@." (List.length alphabet) (String.concat ", " alphabet)
+let limit_printed_words = 10
 
-exception NotEquivalent of string
+let () = pf "I shall test all the given PDAs on all the possible words by increasing length.
+I will print the first %d accepted words.
+I will stop as soon as I find a word that differenciates these PDAs.
+I will not stop otherwise until I am killed (with Ctrl+C).@."
+    limit_printed_words
 
 let pp_word fmt = function
   | [] -> Format.pp_print_string fmt "λ"
   | word -> Format.(pp_print_list ~pp_sep:(fun _fmt () -> ()) pp_print_string) fmt word
 
-let test_all_words () =
-  let not_equivalent first second word =
-    raise (NotEquivalent (Format.(
-        asprintf "The %s grammar accepts \"%a\" but the %s does not."
-          first pp_word word second
-      )))
-  in
-  let rec test_all_words length words =
-    pf "\r[%d] @?" length;
-    let next_words =
-      List.concat_map
-        (fun word ->
-           match PDA.accepts pda1 word, PDA.accepts pda2 word with
-           | true, true ->
-             pf "%a@\n\r[%d] @?" pp_word word length;
-             List.map (fun a -> a :: word) alphabet
-           | false, false -> List.map (fun a -> a :: word) alphabet
-           | true, false -> not_equivalent "first" "second" word
-           | false, true -> not_equivalent "second" "first" word)
-        words
-    in
-    test_all_words (length + 1) next_words
-  in
-  try
-    test_all_words 0 [[]]
-  with
-    NotEquivalent msg -> pf "@.%s" msg
+let nb_printed_words = ref 0
 
-let () = pf "@\nTesting the two grammars on all the words.@\nThe output shows all the words accepted by both grammars.@\nThe tool stops as soon as it finds a word that differenciates@\nthe two grammars, and loops forever if there is none.@."
-let () = test_all_words ()
+let rec test_all_words length words =
+  pf "\r[%d] (%d) @?" length !nb_printed_words;
+  let next_words =
+    List.concat_map
+      (fun word ->
+         let acceptance = List.map (fun pda -> PDA.accepts pda word) pdas in
+         (
+           if List.for_all not acceptance then
+             ()
+           else if List.for_all Fun.id acceptance then
+             (
+               if !nb_printed_words < limit_printed_words then
+                 (
+                   incr nb_printed_words;
+                   pf "%a@\n\r[%d] @?" pp_word word length
+                 )
+             )
+           else
+             (
+               pf "The word %a differentiates these PDAs.@." pp_word word;
+               let acceptance = List.mapi (fun i b -> (i, b)) acceptance in
+               let (accept, reject) = List.partition snd acceptance in
+               let accept = accept |> List.map fst |> List.map soi |> String.concat ", " in
+               let reject = reject |> List.map fst |> List.map soi |> String.concat ", " in
+               pf "PDA/s %s accept it.@\nPDA/s %s reject it." accept reject;
+               exit 1
+             )
+         );
+         List.map (fun a -> a :: word) alphabet)
+      words
+  in
+  test_all_words (length + 1) next_words
+
+let () = test_all_words 0 [[]]
