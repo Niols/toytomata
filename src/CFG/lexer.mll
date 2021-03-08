@@ -14,7 +14,7 @@ rule read = parse
   | terminal      { TERMINAL (Lexing.lexeme lexbuf) }
   | nonterminal   { NONTERMINAL (Lexing.lexeme lexbuf) }
 
-  | "start" | "entrypoint" { START }
+  | "start" | "entrypoint" | "entrypoints" { ENTRYPOINTS }
   | "lambda" | "λ" | "epsilon" | "ε" | "ϵ" { EMPTYWORD }
 
   | "->" { RIGHTARROW }

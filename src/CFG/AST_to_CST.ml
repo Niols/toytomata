@@ -15,5 +15,5 @@ let rule__to__rule rule =
   )
 
 let grammar__to__grammar grammar =
-  CST.Start [CSTHelpers.dummily grammar.start]
+  CST.EntryPoints (List.map CSTHelpers.dummily grammar.entrypoints)
   :: List.map rule__to__rule grammar.rules

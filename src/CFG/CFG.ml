@@ -1,9 +1,9 @@
 module AST = AST
-open AST
 
 (** {2 AST} *)
 
-type t = AST.grammar
+include AST
+type t = AST.cfg
 
 (** {2 CST Parsing & Printing} *)
 
@@ -69,8 +69,8 @@ let terminals_from_grammar grammar =
   |> List.sort_uniq compare
 
 let nonterminals_from_grammar grammar =
-  grammar.start
-  :: List.concat_map nonterminals_from_rule grammar.rules
+  grammar.entrypoints
+  @ List.concat_map nonterminals_from_rule grammar.rules
   |> List.sort_uniq compare
 
 (** FIXME: grammar can be inconsistent like nonterminals without rules and all *)

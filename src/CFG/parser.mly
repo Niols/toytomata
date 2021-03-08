@@ -4,7 +4,7 @@
 %token <string> NONTERMINAL
 %token EMPTYWORD
 
-%token START
+%token ENTRYPOINTS
 
 %token RIGHTARROW
 %token SEMICOLON
@@ -27,8 +27,8 @@ terminated_rule:
 ;;
 
 rule:
-| START vs=separated_nonempty_list(COMMA, located(NONTERMINAL))
-  { CST.Start vs }
+| ENTRYPOINTS vs=separated_nonempty_list(COMMA, located(NONTERMINAL))
+  { CST.EntryPoints vs }
 
 | v=located(NONTERMINAL) RIGHTARROW
       cases=separated_nonempty_list(PIPE, located(production_case))

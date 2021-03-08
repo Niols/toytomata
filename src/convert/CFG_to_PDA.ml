@@ -86,7 +86,12 @@ let cfg_to_pda cfg =
   let pda = PDA.add_initial pda q0 in
   let q1 = PDA.fresh_state () in
   let pda = PDA.add_final pda q1 in
-  let pda = PDA.add_transition pda q0 q1 (None, None, Some cfg.start) in
+  let pda =
+    List.fold_left
+      (fun pda entrypoint -> PDA.add_transition pda q0 q1 (None, None, Some entrypoint))
+      pda
+      cfg.entrypoints
+  in
   let pda =
     List.fold_left
       (fun pda rule ->

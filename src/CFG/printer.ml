@@ -24,8 +24,8 @@ let pp_production_case fmt = function
       fmt case
 
 let pp_rule fmt = function
-  | Start vs ->
-    fpf fmt "start %a"
+  | EntryPoints vs ->
+    fpf fmt "entrypoints %a"
       (pp_print_list ~pp_sep:(pp_constant ", ") (pp_located pp_nonterminal))
       vs
 

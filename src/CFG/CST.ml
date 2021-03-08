@@ -12,7 +12,7 @@ and terminal_or_nonterminal =
 and production_case = terminal_or_nonterminal' list
 
 and rule =
-  | Start of nonterminal' list
+  | EntryPoints of nonterminal' list
   | Production of nonterminal' * production_case' list
 
 and grammar = rule' list
