@@ -31,14 +31,12 @@ terminated_rule:
 ;;
 
 rule:
-| INITIAL states=separated_nonempty_list(COMMA, located(OBJECT)) { CST.Initial states }
-| FINAL states=separated_nonempty_list(COMMA, located(OBJECT))   { CST.Final states }
-| q=located(OBJECT) COMMA a=letter_or_empty COMMA s=symbol_or_empty
-  RIGHTARROW qp=located(OBJECT) COMMA sp=symbol_or_empty         { CST.Transition ((q, a, s), (qp, sp)) }
+| INITIAL states=separated_nonempty_list(COMMA, located(OBJECT)) { CST.Initials states }
+| FINAL states=separated_nonempty_list(COMMA, located(OBJECT))   { CST.Finals states }
 | q=located(OBJECT) RIGHTARROW qp=located(OBJECT) VIA transitions=separated_nonempty_list(OR, transition)
-                                                                { CST.TransitionVia (q, qp, transitions) }
+                                                                { CST.Transition (q, qp, transitions) }
 | q=located(OBJECT) DDASH transition=transition RIGHTARROW qp=located(OBJECT)
-                                                                { CST.TransitionArrow (q, transition, qp) }
+                                                                { CST.Transition (q, qp, [transition]) }
 ;;
 
 letter_or_empty:

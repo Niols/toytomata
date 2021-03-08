@@ -1,22 +1,17 @@
-
-
 let split_pop_push pda =
-  let pda' =
-    List.fold_left
-      (fun pda' ((q, a, s), (q', s')) ->
-         if s = None || s' = None then
-           PDA.add_transition pda' q q' (a, s, s')
-         else
-           let qtmp = PDA.fresh_state () in
-           let pda' = PDA.add_transition pda' q qtmp (a, s, None) in
-           let pda' = PDA.add_transition pda' qtmp q' (None, None, s') in
-           pda')
-      PDA.empty_pda
-      pda.PDA.transitions
-  in
-  { pda' with
-    initials = pda.initials ;
-    finals = pda.finals }
+  List.fold_left
+    (fun pda' (q, q', (a, s, s')) ->
+       if s = None || s' = None then
+         PDA.add_transition q q' (a, s, s') pda'
+       else
+         let qtmp = PDA.fresh_state () in
+         let pda' = PDA.add_transition q qtmp (a, s, None) pda' in
+         let pda' = PDA.add_transition qtmp q' (None, None, s') pda' in
+         pda')
+    PDA.empty_pda
+    (PDA.transitions pda)
+  |> PDA.add_initials (PDA.initial_states pda)
+  |> PDA.add_finals (PDA.final_states pda)
 
 let pda_to_cfg pda =
   let nonterminal_of_states_pair =
@@ -46,7 +41,7 @@ let pda_to_cfg pda =
                 (
                   (* For each transition p -- a,s/s' -> p' *)
                   List.fold_left
-                    (fun cfg ((_, a, s), (p', s')) ->
+                    (fun cfg (_, p', (a, s, s')) ->
                        match s, s' with
                        | None, None ->
                          (
@@ -67,7 +62,7 @@ let pda_to_cfg pda =
                          (
                            (* For each transition q -- b,X/lambda -> q' *)
                            List.fold_left
-                             (fun cfg ((q, b, _), (q', _)) ->
+                             (fun cfg (q, q', (b, _, _)) ->
                                 let v_p'q = nonterminal_of_states_pair p' q in
                                 let v_q'r = nonterminal_of_states_pair q' r in
                                 CFG.add_production v_pr
@@ -98,8 +93,8 @@ let pda_to_cfg pda =
               let v_qq' = nonterminal_of_states_pair q q' in
               CFG.add_entrypoint v_qq' cfg)
            cfg
-           pda.finals)
+           (PDA.final_states pda))
       cfg
-      pda.initials
+      (PDA.initial_states pda)
   in
   cfg

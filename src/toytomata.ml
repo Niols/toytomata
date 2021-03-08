@@ -92,6 +92,14 @@ let pdas =
 
 let () = pf "@\nI have got %d PDAs to work with.@." (List.length pdas)
 
+(* let () =
+ *   pf "Corresponding grammars...:@.";
+ *   List.iter
+ *     (fun pda ->
+ *        let cfg = Convert.pda_to_cfg pda in
+ *        pf "%a@." CFG.pp cfg)
+ *     pdas *)
+
 let alphabet =
   List.fold_left (fun alphabet pda -> PDA.alphabet pda @ alphabet) [] pdas
   |> List.sort_uniq compare

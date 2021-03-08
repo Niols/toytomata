@@ -8,11 +8,9 @@ and symbol = string
 and transition = letter_option' * symbol_option' * symbol_option'
 
 and rule =
-  | Initial of state' list
-  | Final of state' list
-  | Transition of (state' * letter_option' * symbol_option') * (state' * symbol_option')
-  | TransitionVia of state' * state' * transition list
-  | TransitionArrow of state' * transition * state'
+  | Initials of state' list
+  | Finals of state' list
+  | Transition of state' * state' * transition list
 
 and pda =
   rule' list
