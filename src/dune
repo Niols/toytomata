@@ -2,6 +2,7 @@
  (name toytomata)
  (public_name toytomata)
  (libraries
-  toytomata.cfg
-  toytomata.pda)
+  toytomata.common
+  toytomata.cfg toytomata.pda
+  toytomata.convert)
  (preprocess (pps ppx_deriving.std)))

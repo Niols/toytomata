@@ -85,8 +85,7 @@ let pdas =
           pf "Please enter a CFG (end it with Ctrl+D):@.";
           CFG.from_channel stdin
       in
-      let cfg = CFG.replace_late_terminals cfg in
-      let pda = CFG.to_pda cfg in
+      let pda = Convert.cfg_to_pda cfg in
       pf "I have converted it to the following PDA:@\n%a@?" PDA.pp pda;
       pda
     )
