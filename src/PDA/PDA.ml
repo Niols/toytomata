@@ -1,4 +1,5 @@
-open Common
+module AST = AST
+module Runner = Runner
 
 (** {2 AST} *)
 
@@ -47,10 +48,4 @@ let to_file fname g = g |> ast_to_cst |> cst_to_file fname
 
 (** {2 Rest} *)
 
-let accepts pda word =
-  let confs =
-    List.map
-      (fun q -> (q, word, Stack.empty))
-      (initial_states pda)
-  in
-  List.concat_map (Runner.all_steps pda) confs <> []
+let accepts = Runner.accepts
