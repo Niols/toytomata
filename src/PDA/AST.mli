@@ -6,8 +6,6 @@ type state = State.t
 type letter = string
 type symbol = string
 
-type transition = letter option * symbol option * symbol option
-
 type pda
 
 (** {2 Reading PDAs} *)
@@ -22,6 +20,8 @@ val alphabet : pda -> letter list
 (** Alias for {!letters}. *)
 
 val symbols : pda -> symbol list
+
+type transition = letter option * symbol option * symbol option
 
 val transitions :
   ?from_:state -> ?to_:state ->
@@ -38,6 +38,12 @@ val transitions_list :
 val transitions_from : state -> pda -> (state * transition) list
 (** [transitions_from q pda] is similar to [transitions ~from_:q pda] except
    that it answers faster and that [q] does not appear in the output. *)
+
+type letter_transition = letter * symbol option * symbol option
+type epsilon_transition = symbol option * symbol option
+
+val letter_transitions_from : state -> pda -> (state * letter_transition) list
+val epsilon_transitions_from : state -> pda -> (state * epsilon_transition) list
 
 (** {2 Creating PDAs} *)
 

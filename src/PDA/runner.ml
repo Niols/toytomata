@@ -31,13 +31,13 @@ let step_only_letter a (pda, confs) =
     (fun (q, pi) ->
        List.filter_map
          (fun (q', (b, s, s')) ->
-            if b <> Some a then
+            if b <> a then
               None
             else
               match pop_maybe pi s with
               | None -> None
               | Some pi -> Some (q', push_maybe pi s'))
-         (transitions_from q pda))
+         (letter_transitions_from q pda))
   |> (fun confs -> (pda, confs))
 
 module StateStackSet = Set.Make(struct
@@ -57,14 +57,11 @@ let steps_only_empty (pda, confs) =
     else
       let new_confs =
         List.filter_map
-          (fun (q', (b, s, s')) ->
-             if b <> None then
-               None
-             else
-               match pop_maybe pi s with
-               | None -> None
-               | Some pi -> Some (q', push_maybe pi s'))
-          (transitions_from q pda)
+          (fun (q', (s, s')) ->
+             match pop_maybe pi s with
+             | None -> None
+             | Some pi -> Some (q', push_maybe pi s'))
+          (epsilon_transitions_from q pda)
       in
       all_empty_steps
         (StateStackSet.add (q, pi) confs_done)
