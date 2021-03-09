@@ -4,18 +4,12 @@ open AST
 type word = letter list
 type stack = symbol Stack.t
 
-module StateStackSet = Set.Make(struct
-    type t = (state * stack)
-    let compare = compare (* FIXME: avoid polymorphic compare, especially on states *)
-  end)
-
-type configuration = pda * StateStackSet.t
+type configuration = pda * (state * stack) list
 
 let initial pda =
   let conf =
     initial_states pda
     |> List.map (fun q -> (q, Stack.empty))
-    |> StateStackSet.of_list
   in
   (pda, conf)
 
@@ -33,10 +27,9 @@ let push_maybe stack = function
 
 let step_only_letter a (pda, confs) =
   confs
-  |> StateStackSet.to_seq
-  |> Seq.flat_map
+  |> List.concat_map
     (fun (q, pi) ->
-       Seq.filter_map
+       List.filter_map
          (fun (q', (b, s, s')) ->
             if b <> Some a then
               None
@@ -44,10 +37,13 @@ let step_only_letter a (pda, confs) =
               match pop_maybe pi s with
               | None -> None
               | Some pi -> Some (q', push_maybe pi s'))
-         (transitions_from q pda
-          |> List.to_seq))
-  |> StateStackSet.of_seq
+         (transitions_from q pda))
   |> (fun confs -> (pda, confs))
+
+module StateStackSet = Set.Make(struct
+    type t = (state * stack)
+    let compare = compare (* FIXME: avoid polymorphic compare, especially on states *)
+  end)
 
 let steps_only_empty (pda, confs) =
   let rec one_empty_step confs_done (q, pi) =
@@ -55,7 +51,7 @@ let steps_only_empty (pda, confs) =
       confs_done
     else
       let new_confs =
-        Seq.filter_map
+        List.filter_map
           (fun (q', (b, s, s')) ->
              if b <> None then
                None
@@ -63,16 +59,21 @@ let steps_only_empty (pda, confs) =
                match pop_maybe pi s with
                | None -> None
                | Some pi -> Some (q', push_maybe pi s'))
-          (transitions_from q pda
-           |> List.to_seq)
+          (transitions_from q pda)
       in
       all_empty_steps
         (StateStackSet.add (q, pi) confs_done)
         new_confs
   and all_empty_steps confs_done confs_to_do =
-    Seq.fold_left one_empty_step confs_done confs_to_do
+    List.fold_left one_empty_step confs_done confs_to_do
   in
-  (pda, all_empty_steps StateStackSet.empty (StateStackSet.to_seq confs))
+  let confs =
+    confs
+    |> all_empty_steps StateStackSet.empty
+    |> StateStackSet.to_seq
+    |> List.of_seq
+  in
+  (pda, confs)
 
 (* Since we can never be sure that the empty transitions have been done on a
    configuration, we always need to start with them. Therefore, so as to avoid
@@ -86,7 +87,7 @@ let steps_word word conf =
 
 let accepting conf =
   let (pda, confs) = steps_only_empty conf in
-  StateStackSet.exists
+  List.exists
     (fun (q, pi) -> is_final q pda && Stack.is_empty pi)
     confs
 
