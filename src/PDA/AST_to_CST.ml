@@ -14,6 +14,6 @@ let pda__to__pda pda =
        let q' = l (State.to_string q') in
        let t = (l a, l s, l s') in
        l (CST.Transition (q, q', [t])))
-    (transitions pda)
+    (transitions_list pda)
 
 let pda__to__pda' pda = l (pda__to__pda pda)

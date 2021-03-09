@@ -27,6 +27,12 @@ val transitions :
   ?from_:state -> ?to_:state ->
   ?that_read:letter option ->
   ?that_pop:symbol option -> ?that_push:symbol option ->
+  pda -> (state * state * transition) Seq.t
+
+val transitions_list :
+  ?from_:state -> ?to_:state ->
+  ?that_read:letter option ->
+  ?that_pop:symbol option -> ?that_push:symbol option ->
   pda -> (state * state * transition) list
 
 val transitions_from : state -> pda -> (state * transition) list

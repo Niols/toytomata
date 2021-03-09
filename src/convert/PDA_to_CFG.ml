@@ -9,7 +9,7 @@ let split_pop_push pda =
          let pda' = PDA.add_transition qtmp q' (None, None, s') pda' in
          pda')
     PDA.empty_pda
-    (PDA.transitions pda)
+    (PDA.transitions_list pda)
   |> PDA.add_initials (PDA.initial_states pda)
   |> PDA.add_finals (PDA.final_states pda)
 
@@ -74,11 +74,11 @@ let pda_to_cfg pda =
                                   cfg
                              )
                              cfg
-                             (PDA.transitions ~that_pop:(Some s') pda)
+                             (PDA.transitions_list ~that_pop:(Some s') pda)
                          )
                        | Some _, Some _ -> assert false)
                     cfg
-                    (PDA.transitions ~from_:p pda)
+                    (PDA.transitions_list ~from_:p pda)
                 ))
            cfg
            (PDA.states pda))

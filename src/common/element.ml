@@ -8,6 +8,9 @@ module type S = sig
 
   val equal : t -> t -> bool
   val compare : t -> t -> int
+
+  module Set : Set.S with type elt := t
+  module Map : Map.S with type key := t
 end
 
 module Make (U : UNIT) : S = struct
@@ -24,4 +27,14 @@ module Make (U : UNIT) : S = struct
 
   let equal e1 e2 = Int.equal e1.id e2.id
   let compare e1 e2 = Int.compare e1.id e2.id
+
+  module Set = Set.Make(struct
+      type nonrec t = t
+      let compare = compare
+    end)
+
+  module Map = Map.Make(struct
+      type nonrec t = t
+      let compare = compare
+    end)
 end
