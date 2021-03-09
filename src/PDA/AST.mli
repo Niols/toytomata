@@ -35,15 +35,16 @@ val transitions_list :
   ?that_pop:symbol option -> ?that_push:symbol option ->
   pda -> (state * state * transition) list
 
-val transitions_from : state -> pda -> (state * transition) list
+val transitions_from : state -> pda -> (state * transition) Seq.t
 (** [transitions_from q pda] is similar to [transitions ~from_:q pda] except
    that it answers faster and that [q] does not appear in the output. *)
 
-type letter_transition = letter * symbol option * symbol option
-type epsilon_transition = symbol option * symbol option
+val transitions_list_from : state -> pda -> (state * transition) list
 
-val letter_transitions_from : state -> pda -> (state * letter_transition) list
-val epsilon_transitions_from : state -> pda -> (state * epsilon_transition) list
+type stack_transition = symbol option * symbol option
+
+val letter_transitions_from : state -> letter -> pda -> (state * stack_transition) list
+val epsilon_transitions_from : state -> pda -> (state * stack_transition) list
 
 (** {2 Creating PDAs} *)
 

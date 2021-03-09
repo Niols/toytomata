@@ -30,14 +30,11 @@ let step_only_letter a (pda, confs) =
   |> List.concat_map
     (fun (q, pi) ->
        List.filter_map
-         (fun (q', (b, s, s')) ->
-            if b <> a then
-              None
-            else
-              match pop_maybe pi s with
-              | None -> None
-              | Some pi -> Some (q', push_maybe pi s'))
-         (letter_transitions_from q pda))
+         (fun (q', (s, s')) ->
+            match pop_maybe pi s with
+            | None -> None
+            | Some pi -> Some (q', push_maybe pi s'))
+         (letter_transitions_from q a pda))
   |> (fun confs -> (pda, confs))
 
 module StateStackSet = Set.Make(struct

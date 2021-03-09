@@ -6,16 +6,17 @@ type state = State.t
 type letter = string
 type symbol = string
 
-type transition = letter option * symbol option * symbol option
-type letter_transition = letter * symbol option * symbol option
-type epsilon_transition = symbol option * symbol option
+module LetterOptionMap = Map.Make(struct
+    type t = letter option
+    let compare = compare
+  end)
+
+type stack_transition = symbol option * symbol option
 
 type pda =
   { initials : state list ;
     finals : state list ;
-    transitions :
-      ((state * letter_transition) list
-       * (state * epsilon_transition) list) State.Map.t }
+    transitions : (state * stack_transition) list LetterOptionMap.t State.Map.t }
 
 (** {2 Reading PDAs} *)
 
@@ -28,14 +29,18 @@ let final_states pda =
 let is_final q pda =
   final_states pda |> List.mem q
 
+type transition = letter option * symbol option * symbol option
+
 let all_transitions pda =
   pda.transitions
   |> State.Map.to_seq
-  |> Seq.flat_map
-    (fun (q, (lts, ets)) ->
-       Seq.append
-         (lts |> List.to_seq |> Seq.map (fun (q', (a, s, s')) -> (q, q', (Some a, s, s'))))
-         (ets |> List.to_seq |> Seq.map (fun (q', (s, s')) -> (q, q', (None, s, s')))))
+  |> Seq.flat_map @@ fun (q, lom) ->
+  LetterOptionMap.to_seq lom
+  |> Seq.flat_map @@ fun (a, ts) ->
+  ts
+  |> List.to_seq
+  |> Seq.map @@ fun (q', (s, s')) ->
+  (q, q', (a, s, s'))
 
 let transitions =
   let maybe_filter opt f =
@@ -57,12 +62,33 @@ let transitions_list
   |> List.of_seq
 
 let transitions_from q pda =
-  let (lts, ets) = State.Map.find q pda.transitions in
-  List.map (fun (q', (a, s, s')) -> (q', (Some a, s, s'))) lts
-  @ List.map (fun (q', (s, s')) -> (q', (None, s, s'))) ets
+  pda.transitions
+  |> State.Map.find q
+  |> LetterOptionMap.to_seq
+  |> Seq.flat_map @@ fun (a, ts) ->
+  ts
+  |> List.to_seq
+  |> Seq.map @@ fun (q', (s, s')) ->
+  (q', (a, s, s'))
 
-let letter_transitions_from q pda = fst (State.Map.find q pda.transitions)
-let epsilon_transitions_from q pda = snd (State.Map.find q pda.transitions)
+let transitions_list_from q pda =
+  transitions_from q pda |> List.of_seq
+
+let letter_transitions_from q a pda =
+  pda.transitions
+  |> State.Map.find q
+  |> LetterOptionMap.find_opt (Some a)
+  |> (function
+      | None -> []
+      | Some ts -> ts)
+
+let epsilon_transitions_from q pda =
+  pda.transitions
+  |> State.Map.find q
+  |> LetterOptionMap.find_opt None
+  |> (function
+      | None -> []
+      | Some ts -> ts)
 
 let states pda =
   (
@@ -107,20 +133,20 @@ let add_final s pda =
 let add_finals ss pda =
   { pda with finals = ss @ pda.finals }
 
-let add_transition q q' t pda =
+let add_transition q q' (a, s, s') pda =
   { pda with
     transitions =
-      State.Map.update q
-        (fun present ->
-           let (lts, ets) =
-             match present with
-             | None -> ([], [])
-             | Some (lts, ets) -> (lts, ets)
-           in
-           match t with
-           | (None, s, s') -> Some (lts, (q', (s, s')) :: ets)
-           | (Some a, s, s') -> Some ((q', (a, s, s')) :: lts, ets))
-        pda.transitions }
+      pda.transitions
+      |> State.Map.update q
+        (function
+          | None -> Some (LetterOptionMap.singleton a [q', (s, s')])
+          | Some lom ->
+            Some
+              (LetterOptionMap.update a
+                 (function
+                   | None -> Some [q', (s, s')]
+                   | Some ts -> Some ((q', (s, s')) :: ts))
+                 lom)) }
 
 let add_transitions q q' ts pda =
   List.fold_left (fun pda t -> add_transition q q' t pda) pda ts
