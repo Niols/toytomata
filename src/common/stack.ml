@@ -14,3 +14,6 @@ let pop s =
   match pop_opt s with
   | None -> failwith "Stack.pop"
   | Some (x, s) -> (x, s)
+
+let equal = List.equal
+let compare = List.compare

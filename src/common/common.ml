@@ -1,5 +1,6 @@
 module Stack = Stack
 module CSTHelpers = CSTHelpers
+module Element = Element
 
 type 'a stack = 'a Stack.t
 

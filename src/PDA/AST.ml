@@ -1,4 +1,8 @@
-type state = string
+open Common
+
+module State = Element.Make(struct end)
+type state = State.t
+
 type letter = string
 type symbol = string
 
@@ -10,8 +14,6 @@ type pda =
     transitions : (state * state * transition) list }
 
 (** {2 Reading PDAs} *)
-
-let state_to_string = Fun.id
 
 let initial_states pda =
   pda.initials
@@ -67,11 +69,8 @@ let symbols pda =
 let empty_pda =
   { initials = []; finals = []; transitions = [] }
 
-let fresh_state =
-  let counter = ref 0 in
-  fun () ->
-    incr counter;
-    "q" ^ string_of_int !counter
+let fresh_state ?(hint="Q") () =
+  State.fresh ~hint
 
 let add_initial s pda =
   { pda with initials = s :: pda.initials }

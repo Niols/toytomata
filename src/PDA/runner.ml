@@ -42,7 +42,12 @@ let step_only_letter a (pda, confs) =
 
 module StateStackSet = Set.Make(struct
     type t = (state * stack)
-    let compare = compare (* FIXME: avoid polymorphic compare, especially on states *)
+    let compare (q, pi) (q', pi') =
+      let c = State.compare q q' in
+      if c <> 0 then
+        c
+      else
+        Stack.compare String.compare pi pi'
   end)
 
 let steps_only_empty (pda, confs) =

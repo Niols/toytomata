@@ -1,6 +1,8 @@
 (** {1 PDAs} *)
 
-type state
+module State : Common.Element.S
+
+type state = State.t
 type letter = string
 type symbol = string
 
@@ -9,8 +11,6 @@ type transition = letter option * symbol option * symbol option
 type pda
 
 (** {2 Reading PDAs} *)
-
-val state_to_string : state -> string
 
 val states : pda -> state list
 val initial_states : pda -> state list
@@ -37,7 +37,7 @@ val transitions_from : state -> pda -> (state * transition) list
 
 val empty_pda : pda
 
-val fresh_state : unit -> state
+val fresh_state : ?hint:string -> unit -> state
 
 val add_initial : state -> pda -> pda
 val add_initials : state list -> pda -> pda
