@@ -116,44 +116,53 @@ let pp_word fmt = function
 
 let nb_printed_words = ref 0
 
-let rec test_all_words length words =
+let rec test_all_words length words_and_confs =
   pf "\r[%d] @?" length;
-  let next_words =
-    List.concat_map
-      (fun word ->
-         let acceptance = List.map (fun pda -> PDA.accepts pda word) pdas in
-         (
-           if List.for_all not acceptance then
-             ()
-           else if List.for_all Fun.id acceptance then
-             (
-               if !nb_printed_words < !nb_words then
-                 (
-                   incr nb_printed_words;
-                   pf "%a" pp_word word;
-                   if !nb_printed_words = !nb_words then
-                     (
-                       pf " (last printed one)@.";
-                       if List.length pdas <= 1 then
-                         exit 0
-                     );
-                   pf "@\n\r[%d] @?" length
-                 )
-             )
-           else
-             (
-               pf "The word %a differentiates these PDAs.@." pp_word word;
-               let acceptance = List.mapi (fun i b -> (i, b)) acceptance in
-               let (accept, reject) = List.partition snd acceptance in
-               let accept = accept |> List.map fst |> List.map soi |> String.concat ", " in
-               let reject = reject |> List.map fst |> List.map soi |> String.concat ", " in
-               pf "PDA/s %s accept it.@\nPDA/s %s reject it." accept reject;
-               exit 1
-             )
-         );
-         List.map (fun a -> a :: word) alphabet)
-      words
-  in
-  test_all_words (length + 1) next_words
 
-let () = test_all_words 0 [[]]
+  (* Check that all PDA configurations agree on all the words. If they agree and
+     accept, print the word. If they disagree, report and exit. *)
+  List.iter
+    (fun (word, confs) ->
+       let acceptance = List.map PDA.Runner.accepting confs in
+       if List.for_all not acceptance then
+         ()
+       else if List.for_all Fun.id acceptance then
+         (
+           if !nb_printed_words < !nb_words then
+             (
+               incr nb_printed_words;
+               pf "%a" pp_word (List.rev word);
+               if !nb_printed_words = !nb_words then
+                 (
+                   pf " (last printed one)";
+                   if List.length pdas <= 1 then
+                     (
+                       pf "@.";
+                       exit 0
+                     )
+                 );
+               pf "@\n\r[%d] @?" length
+             )
+         )
+       else
+         (
+           pf "The word %a differentiates these PDAs.@." pp_word (List.rev word);
+           let acceptance = List.mapi (fun i b -> (i, b)) acceptance in
+           let (accept, reject) = List.partition snd acceptance in
+           let accept = accept |> List.map fst |> List.map soi |> String.concat ", " in
+           let reject = reject |> List.map fst |> List.map soi |> String.concat ", " in
+           pf "PDA/s %s accept it.@\nPDA/s %s reject it." accept reject;
+           exit 1
+         )
+    )
+    words_and_confs;
+
+  let next_words_and_confs =
+    words_and_confs |> List.concat_map @@ fun (word, confs) ->
+    alphabet |> List.map @@ fun a ->
+    (a :: word, List.map (PDA.Runner.step_letter a) confs)
+  in
+
+  test_all_words (length + 1) next_words_and_confs
+
+let () = test_all_words 0 [([], List.map PDA.Runner.initial pdas)]
