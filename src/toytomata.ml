@@ -16,6 +16,9 @@ let add_input kind = inputs := (default_input kind) :: !inputs
 let cur_input () = List.hd !inputs
 let all_inputs () = List.rev !inputs
 
+let default_nb_words = 10
+let nb_words = ref default_nb_words
+
 let usage_str =
   spf "%s KIND [OPTIONS] [KIND [OPTIONS] ...]
 
@@ -48,6 +51,8 @@ let spec =
     "--from-string", String set_source_from_string, "STR Gets input from given string";
     "-s",            String set_source_from_string, "STR Short for --from-string";
     "--from-stdin",  Unit   set_source_from_stdin,     " Gets input from stdin (default)";
+    "--nb-words",    Int    ((:=) nb_words),    (spf "NB Print NB words (default: %d)" default_nb_words);
+
   ] |> Arg.align
 
 let () =
@@ -99,13 +104,11 @@ let alphabet =
 let () = pf "Their smallest common alphabet has %d letters and is: %s.@."
     (List.length alphabet) (String.concat ", " alphabet)
 
-let limit_printed_words = 10
-
 let () = pf "I shall test all the given PDAs on all the possible words by increasing length.
 I will print the first %d accepted words.
 I will stop as soon as I find a word that differenciates these PDAs.
 I will not stop otherwise until I am killed (with Ctrl+C).@."
-    limit_printed_words
+    !nb_words
 
 let pp_word fmt = function
   | [] -> Format.pp_print_string fmt "λ"
@@ -124,16 +127,17 @@ let rec test_all_words length words =
              ()
            else if List.for_all Fun.id acceptance then
              (
-               if !nb_printed_words < limit_printed_words then
+               if !nb_printed_words < !nb_words then
                  (
                    incr nb_printed_words;
-                   pf "%a%s@\n\r[%d] @?"
-                     pp_word word
-                     (if !nb_printed_words = limit_printed_words then
-                        " (last printed one)"
-                      else
-                        "")
-                     length
+                   pf "%a" pp_word word;
+                   if !nb_printed_words = !nb_words then
+                     (
+                       pf " (last printed one)@.";
+                       if List.length pdas <= 1 then
+                         exit 0
+                     );
+                   pf "@\n\r[%d] @?" length
                  )
              )
            else
