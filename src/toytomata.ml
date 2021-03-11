@@ -1,6 +1,4 @@
 open Toytomata
-module CFG = ContextFreeGrammar
-module PDA = PushdownAutomaton
 
 let pf = Format.printf
 let spf = Format.sprintf
@@ -97,7 +95,7 @@ let pdas =
           pf "Please enter a CFG (end it with Ctrl+D):@.";
           CFG.from_channel stdin
       in
-      let pda = Convert.cfg_to_pda cfg in
+      let pda = cfg_to_pda cfg in
       pf "I have converted it to the following PDA:@\n%a@?" PDA.pp pda;
       pda
     )
