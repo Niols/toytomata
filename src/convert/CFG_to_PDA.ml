@@ -1,64 +1,67 @@
 open CFG
 open AST
 
-let replace_late_terminals_in_case replacements case =
-  let (_, case, replacements) =
+let replace_late_terminals_in_production replacements p =
+  let (_, p, replacements) =
     List.fold_left
-      (fun (seen_nonterminal, case, replacements) a_or_v ->
-         match a_or_v with
-         | Terminal a when seen_nonterminal ->
+      (fun (seen_nonterminal, p, replacements) -> function
+         | T a when seen_nonterminal ->
            (
              match List.assoc_opt a replacements with
              | None ->
                let v = fresh_nonterminal () in
-               (true, NonTerminal v :: case, (a, v) :: replacements)
+               (true, N v :: p, (a, v) :: replacements)
              | Some v ->
-               (true, NonTerminal v :: case, replacements)
+               (true, N v :: p, replacements)
            )
-         | Terminal a ->
-           (false, Terminal a :: case, replacements)
-         | NonTerminal v ->
-           (true, NonTerminal v :: case, replacements))
+         | T a ->
+           (false, T a :: p, replacements)
+         | N v ->
+           (true, N v :: p, replacements))
       (false, [], replacements)
-      case
+      p
   in
-  (List.rev case, replacements)
+  (List.rev p, replacements)
 
-let replace_late_terminals grammar =
-  let (rules, replacements) =
+let replace_late_terminals cfg =
+  let (productions, replacements) =
     List.fold_left
-      (fun (rules, replacements) rule ->
-         let (rhs, replacements) = replace_late_terminals_in_case replacements rule.rhs in
-         ({ rule with rhs } :: rules, replacements))
+      (fun (productions, replacements) (v, p) ->
+         let (p, replacements) = replace_late_terminals_in_production replacements p in
+         ((v, p) :: productions, replacements))
       ([], [])
-      grammar.rules
+      (productions_list cfg)
   in
-  let rules =
-    rules @ List.map (fun (a, v) -> { lhs = v; rhs = [Terminal a] }) replacements
+  let productions =
+    productions @ List.map (fun (a, v) -> (v, [T a])) replacements
   in
-  { grammar with rules }
+  List.fold_left
+    (fun cfg (v, p) -> add_production v p cfg)
+    (empty_cfg |> add_entrypoints (entrypoints cfg))
+    productions
 
 type terminal_and_or_nonterminal =
-  | OnlyTerminal of terminal
-  | OnlyNonTerminal of nonterminal
-  | Both of terminal * nonterminal
+  | OnlyTerminal of PDA.letter
+  | OnlyNonTerminal of PDA.symbol
+  | Both of PDA.letter * PDA.symbol
 
-let regroup_rhs rhs =
-  let (terminals, nonterminals) =
-    List.partition (function Terminal _ -> true | _ -> false) rhs
+let regroup_production rhs =
+  let (ts, ns) =
+    List.partition (function T _ -> true | _ -> false) rhs
   in
-  let terminals = List.map (function Terminal a -> a | _ -> assert false) terminals in
-  let nonterminals = List.map (function NonTerminal v -> v | _ -> assert false) nonterminals in
-  let nonterminals = List.rev nonterminals in (* actually crucial *)
-  let rec regroup group terminals nonterminals =
-    match terminals, nonterminals with
-    | [], nonterminals -> List.rev_append group (List.map (fun v -> OnlyNonTerminal v) nonterminals)
-    | terminals, [] -> List.rev_append group (List.map (fun a -> OnlyTerminal a) terminals)
-    | a::terminals, v::nonterminals -> regroup (Both (a, v) :: group) terminals nonterminals
+  let ts = List.map (function T a -> a | _ -> assert false) ts in
+  let ns = List.map (function N v -> v | _ -> assert false) ns in
+  let ns = List.map NonTerminal.to_string ns in
+  let ns = List.rev ns in (* actually crucial *)
+  let rec regroup group ts ns =
+    match ts, ns with
+    | [], ns -> List.rev_append group (List.map (fun v -> OnlyNonTerminal v) ns)
+    | ts, [] -> List.rev_append group (List.map (fun a -> OnlyTerminal a) ts)
+    | a::ts, v::ns -> regroup (Both (a, v) :: group) ts ns
   in
-  regroup [] terminals nonterminals
+  regroup [] ts ns
 
-let rec rhs_to_pda pda ?pop ~from_ ~to_ = function
+let rec production_to_pda pda ?pop ~from_ ~to_ = function
   | [] -> PDA.add_transition from_ to_ (None, pop, None) pda
   | [one] ->
     (
@@ -76,7 +79,7 @@ let rec rhs_to_pda pda ?pop ~from_ ~to_ = function
         | OnlyNonTerminal v -> PDA.add_transition from_ q' (None, pop, Some v) pda
         | Both (a, v) -> PDA.add_transition from_ q' (Some a, pop, Some v) pda
       in
-      rhs_to_pda pda ~from_:q' ~to_ rhs
+      production_to_pda pda ~from_:q' ~to_ rhs
     )
 
 let cfg_to_pda cfg =
@@ -92,13 +95,13 @@ let cfg_to_pda cfg =
     List.fold_left
       (fun pda entrypoint -> PDA.add_transition q0 q1 (None, None, Some entrypoint) pda)
       pda
-      cfg.entrypoints
+      (entrypoints cfg |> List.map NonTerminal.to_string)
   in
   let pda =
     List.fold_left
-      (fun pda rule ->
-         rhs_to_pda pda ~pop:rule.lhs ~from_:q1 ~to_:q1 (regroup_rhs rule.rhs))
+      (fun pda (v, p) ->
+         production_to_pda pda ~pop:(NonTerminal.to_string v) ~from_:q1 ~to_:q1 (regroup_production p))
       pda
-      cfg.rules
+      (productions_list cfg)
   in
   pda

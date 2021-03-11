@@ -1,23 +1,47 @@
+open Common
+
+module NonTerminal = Element.Make(struct end)
+type nonterminal = NonTerminal.t
+
 type terminal = string
 
-and nonterminal = string
+type component = T of terminal | N of nonterminal
 
-and terminal_or_nonterminal =
-  | Terminal of terminal
-  | NonTerminal of nonterminal
-
-and rule =
-  { lhs : nonterminal ;
-    rhs : terminal_or_nonterminal list }
+type production = component list
 
 and cfg =
   { entrypoints : nonterminal list ;
-    rules : rule list }
+    productions : (nonterminal * production) list }
 
-[@@deriving show { with_path = false } ]
+(** {2 Reading} *)
+
+let entrypoints cfg = cfg.entrypoints
+
+let productions_list cfg = cfg.productions
+let productions cfg = productions_list cfg |> List.to_seq
+
+let nonterminals_from_production =
+  List.filter_map (function N v -> Some v | _ -> None)
+
+let nonterminals cfg =
+  cfg.entrypoints
+  @ List.concat_map (fun (v, p) -> v :: nonterminals_from_production p) (productions_list cfg)
+
+let terminals_from_production =
+  List.filter_map (function T a -> Some a | _ -> None)
+
+let terminals cfg =
+  List.concat_map (fun (_, p) -> terminals_from_production p) (productions_list cfg)
+
+let alphabet = terminals
+
+(** {2 Creating} *)
 
 let empty_cfg =
-  { entrypoints = []; rules = [] }
+  { entrypoints = []; productions = [] }
+
+let fresh_nonterminal ?(hint="X") () =
+  NonTerminal.fresh ~hint
 
 let add_entrypoint v cfg =
   { cfg with entrypoints = v :: cfg.entrypoints }
@@ -26,4 +50,7 @@ let add_entrypoints vs cfg =
   { cfg with entrypoints = vs @ cfg.entrypoints }
 
 let add_production v p cfg =
-  { cfg with rules = { lhs = v; rhs = p } :: cfg.rules }
+  { cfg with productions = (v, p) :: cfg.productions }
+
+let add_productions v ps cfg =
+  List.fold_left (fun cfg p -> add_production v p cfg) cfg ps

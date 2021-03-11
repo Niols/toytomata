@@ -8,6 +8,11 @@ type symbol = string
 
 type pda
 
+(** {2 Other Types} *)
+
+type transition = letter option * symbol option * symbol option
+type stack_transition = symbol option * symbol option
+
 (** {2 Reading PDAs} *)
 
 val states : pda -> state list
@@ -20,8 +25,6 @@ val alphabet : pda -> letter list
 (** Alias for {!letters}. *)
 
 val symbols : pda -> symbol list
-
-type transition = letter option * symbol option * symbol option
 
 val transitions :
   ?from_:state -> ?to_:state ->
@@ -40,8 +43,6 @@ val transitions_from : state -> pda -> (state * transition) Seq.t
    that it answers faster and that [q] does not appear in the output. *)
 
 val transitions_list_from : state -> pda -> (state * transition) list
-
-type stack_transition = symbol option * symbol option
 
 val letter_transitions_from : state -> letter -> pda -> (state * stack_transition) list
 val epsilon_transitions_from : state -> pda -> (state * stack_transition) list

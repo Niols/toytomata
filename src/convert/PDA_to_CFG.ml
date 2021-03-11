@@ -48,9 +48,7 @@ let pda_to_cfg pda =
                            (* Transition without stack *)
                            let v_p'r = nonterminal_of_states_pair p' r in
                            CFG.add_production v_pr
-                             (match a with
-                              | None -> [NonTerminal v_p'r]
-                              | Some a -> [Terminal a; NonTerminal v_p'r])
+                             ((match a with None -> [] | Some a -> [CFG.T a]) @ [CFG.N v_p'r])
                              cfg
                          )
                        | Some _, None ->
@@ -66,11 +64,10 @@ let pda_to_cfg pda =
                                 let v_p'q = nonterminal_of_states_pair p' q in
                                 let v_q'r = nonterminal_of_states_pair q' r in
                                 CFG.add_production v_pr
-                                  (match a, b with
-                                   | None, None -> [NonTerminal v_p'q; NonTerminal v_q'r]
-                                   | Some a, None -> [Terminal a; NonTerminal v_p'q; NonTerminal v_q'r]
-                                   | None, Some b -> [NonTerminal v_p'q; Terminal b; NonTerminal v_q'r]
-                                   | Some a, Some b -> [Terminal a; NonTerminal v_p'q; Terminal b; NonTerminal v_q'r])
+                                  ((match a with None -> [] | Some a -> [CFG.T a])
+                                   @ [CFG.N v_p'q]
+                                   @ (match b with None -> [] | Some b -> [CFG.T b])
+                                   @ [CFG.N v_q'r])
                                   cfg
                              )
                              cfg

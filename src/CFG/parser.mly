@@ -13,12 +13,12 @@
 
 %token EOF
 
-%start <CST.grammar'> entrypoint
+%start <CST.cfg'> entrypoint
 %%
 
-entrypoint: g=located(grammar) EOF { g }
+entrypoint: g=located(cfg) EOF { g }
 
-grammar:
+cfg:
 | rules=list(terminated_rule) { rules }
 ;;
 
@@ -31,17 +31,17 @@ rule:
   { CST.EntryPoints vs }
 
 | v=located(NONTERMINAL) RIGHTARROW
-      cases=separated_nonempty_list(PIPE, located(production_case))
+      cases=separated_nonempty_list(PIPE, located(production))
   { CST.Production (v, cases) }
 ;;
 
-terminal_or_nonterminal:
-| t=located(TERMINAL)    { CST.Terminal t }
-| v=located(NONTERMINAL) { CST.NonTerminal v }
+component:
+| t=located(TERMINAL)    { CST.T t }
+| v=located(NONTERMINAL) { CST.N v }
 
-production_case:
+production:
 | EMPTYWORD     { [] }
-| case=nonempty_list(located(terminal_or_nonterminal)) { case }
+| case=nonempty_list(located(component)) { case }
 ;;
 
 %inline located(X): x=X { CSTHelpers.with_positions $startpos $endpos x }

@@ -25,7 +25,7 @@ let cst_to_string = Format.asprintf "%a" pp_cst
 
 let cst_to_channel ochan pda =
   let fmt = Format.formatter_of_out_channel ochan in
-  Printer.pp_pda' fmt pda
+  pp_cst fmt pda
 
 let cst_to_file fname pda =
   let ochan = open_out fname in

@@ -5,23 +5,23 @@ type terminal = string
 
 and nonterminal = string
 
-and terminal_or_nonterminal =
-  | Terminal of terminal'
-  | NonTerminal of nonterminal'
+and component =
+  | T of terminal'
+  | N of nonterminal'
 
-and production_case = terminal_or_nonterminal' list
+and production = component' list
 
 and rule =
   | EntryPoints of nonterminal' list
-  | Production of nonterminal' * production_case' list
+  | Production of nonterminal' * production' list
 
-and grammar = rule' list
+and cfg = rule' list
 
 and terminal' = terminal located
 and nonterminal' = nonterminal located
-and terminal_or_nonterminal' = terminal_or_nonterminal located
-and production_case' = production_case located
+and component' = component located
+and production' = production located
 and rule' = rule located
-and grammar' = grammar located
+and cfg' = cfg located
 
 [@@deriving show { with_path = false }]

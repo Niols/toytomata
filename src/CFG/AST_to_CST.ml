@@ -1,19 +1,24 @@
 open Common
 open AST
 
-let terminal_or_nonterminal__to__terminal_or_nonterminal = function
-  | Terminal a -> CST.Terminal (CSTHelpers.dummily a)
-  | NonTerminal v -> CST.NonTerminal (CSTHelpers.dummily v)
+let l = CSTHelpers.dummily
+let ll = List.map l
 
-let terminal_or_nonterminal__to__terminal_or_nonterminal' =
-  CSTHelpers.map_add_dummy terminal_or_nonterminal__to__terminal_or_nonterminal
+let component__to__component = function
+  | T a -> CST.T (l a)
+  | N v -> CST.N (l (NonTerminal.to_string v))
 
-let rule__to__rule rule =
+let component__to__component' c =
+  l (component__to__component c)
+
+let production__to__production (v, p) =
   CST.Production (
-    CSTHelpers.dummily rule.lhs,
-    [CSTHelpers.dummily (List.map terminal_or_nonterminal__to__terminal_or_nonterminal' rule.rhs)]
+    l (NonTerminal.to_string v),
+    [l (List.map component__to__component' p)]
   )
 
-let grammar__to__grammar grammar =
-  CST.EntryPoints (List.map CSTHelpers.dummily grammar.entrypoints)
-  :: List.map rule__to__rule grammar.rules
+let cfg__to__cfg cfg =
+  CST.EntryPoints (cfg |> entrypoints |> List.map NonTerminal.to_string |> ll)
+  :: List.map production__to__production (productions_list cfg)
+
+let cfg__to__cfg' cfg = l (cfg__to__cfg cfg)
