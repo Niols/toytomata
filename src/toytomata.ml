@@ -1,4 +1,6 @@
 open Common
+module CFG = ContextFreeGrammar
+module PDA = PushdownAutomaton
 
 type kind = PDA | CFG
 type source = FromStdin | FromFile of string | FromString of string

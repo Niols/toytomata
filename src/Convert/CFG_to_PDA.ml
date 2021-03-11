@@ -1,16 +1,16 @@
-open CFG
-open AST
+module PDA = PushdownAutomaton
+module CFG = ContextFreeGrammar
 
 let replace_late_terminals_in_production replacements p =
   let (_, p, replacements) =
     List.fold_left
       (fun (seen_nonterminal, p, replacements) -> function
-         | T a when seen_nonterminal ->
+         | CFG.T a when seen_nonterminal ->
            (
              match List.assoc_opt a replacements with
              | None ->
-               let v = fresh_nonterminal () in
-               (true, N v :: p, (a, v) :: replacements)
+               let v = CFG.fresh_nonterminal () in
+               (true, CFG.N v :: p, (a, v) :: replacements)
              | Some v ->
                (true, N v :: p, replacements)
            )
@@ -30,14 +30,14 @@ let replace_late_terminals cfg =
          let (p, replacements) = replace_late_terminals_in_production replacements p in
          ((v, p) :: productions, replacements))
       ([], [])
-      (productions_list cfg)
+      (CFG.productions_list cfg)
   in
   let productions =
-    productions @ List.map (fun (a, v) -> (v, [T a])) replacements
+    productions @ List.map (fun (a, v) -> (v, [CFG.T a])) replacements
   in
   List.fold_left
-    (fun cfg (v, p) -> add_production v p cfg)
-    (empty_cfg |> add_entrypoints (entrypoints cfg))
+    (fun cfg (v, p) -> CFG.add_production v p cfg)
+    (CFG.empty_cfg |> CFG.add_entrypoints (CFG.entrypoints cfg))
     productions
 
 type terminal_and_or_nonterminal =
@@ -47,11 +47,11 @@ type terminal_and_or_nonterminal =
 
 let regroup_production rhs =
   let (ts, ns) =
-    List.partition (function T _ -> true | _ -> false) rhs
+    List.partition (function CFG.T _ -> true | _ -> false) rhs
   in
-  let ts = List.map (function T a -> a | _ -> assert false) ts in
-  let ns = List.map (function N v -> v | _ -> assert false) ns in
-  let ns = List.map NonTerminal.to_string ns in
+  let ts = List.map (function CFG.T a -> a | _ -> assert false) ts in
+  let ns = List.map (function CFG.N v -> v | _ -> assert false) ns in
+  let ns = List.map CFG.NonTerminal.to_string ns in
   let ns = List.rev ns in (* actually crucial *)
   let rec regroup group ts ns =
     match ts, ns with
@@ -95,13 +95,13 @@ let cfg_to_pda cfg =
     List.fold_left
       (fun pda entrypoint -> PDA.add_transition q0 q1 (None, None, Some entrypoint) pda)
       pda
-      (entrypoints cfg |> List.map NonTerminal.to_string)
+      (CFG.entrypoints cfg |> List.map CFG.NonTerminal.to_string)
   in
   let pda =
     List.fold_left
       (fun pda (v, p) ->
-         production_to_pda pda ~pop:(NonTerminal.to_string v) ~from_:q1 ~to_:q1 (regroup_production p))
+         production_to_pda pda ~pop:(CFG.NonTerminal.to_string v) ~from_:q1 ~to_:q1 (regroup_production p))
       pda
-      (productions_list cfg)
+      (CFG.productions_list cfg)
   in
   pda

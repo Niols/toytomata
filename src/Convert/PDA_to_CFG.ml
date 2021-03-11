@@ -1,3 +1,6 @@
+module PDA = PushdownAutomaton
+module CFG = ContextFreeGrammar
+
 let split_pop_push pda =
   List.fold_left
     (fun pda' (q, q', (a, s, s')) ->

@@ -1,0 +1,8 @@
+(ocamllex lexer)
+(menhir (modules parser))
+
+(library
+ (name PushdownAutomaton)
+ (public_name toytomata.pushdown-automaton)
+ (libraries toytomata.common)
+ (preprocess (pps ppx_deriving.std)))
