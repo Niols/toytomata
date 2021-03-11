@@ -149,9 +149,11 @@ let rec test_all_words length words_and_confs =
            pf "The word %a differentiates these PDAs.@." pp_word (List.rev word);
            let acceptance = List.mapi (fun i b -> (i, b)) acceptance in
            let (accept, reject) = List.partition snd acceptance in
-           let accept = accept |> List.map fst |> List.map soi |> String.concat ", " in
-           let reject = reject |> List.map fst |> List.map soi |> String.concat ", " in
-           pf "PDA/s %s accept it.@\nPDA/s %s reject it." accept reject;
+           let accept_str = accept |> List.map fst |> List.map ((+) 1) |> List.map soi |> List.map ((^) "#") |> String.concat ", " in
+           let reject_str = reject |> List.map fst |> List.map ((+) 1) |> List.map soi |> List.map ((^) "#") |> String.concat ", " in
+           pf "PDA%s %s accept it.@\nPDA%s %s reject it.@."
+             (if List.compare_length_with accept 1 > 0 then "s" else "") accept_str
+             (if List.compare_length_with reject 1 > 0 then "s" else "") reject_str;
            exit 1
          )
     )
