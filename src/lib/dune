@@ -1,0 +1,8 @@
+(library
+ (name Toytomata)
+ (public_name toytomata)
+ (libraries
+  toytomata.common
+  toytomata.convert
+  toytomata.context-free-grammar
+  toytomata.pushdown-automaton))

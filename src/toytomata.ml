@@ -1,6 +1,11 @@
-open Common
+open Toytomata
 module CFG = ContextFreeGrammar
 module PDA = PushdownAutomaton
+
+let pf = Format.printf
+let spf = Format.sprintf
+
+let soi = string_of_int
 
 type kind = PDA | CFG
 type source = FromStdin | FromFile of string | FromString of string

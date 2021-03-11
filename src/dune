@@ -1,9 +1,5 @@
 (executable
  (name toytomata)
  (public_name toytomata)
- (libraries
-  toytomata.common
-  toytomata.context-free-grammar
-  toytomata.pushdown-automaton
-  toytomata.convert)
+ (libraries toytomata)
  (preprocess (pps ppx_deriving.std)))
