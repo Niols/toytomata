@@ -54,3 +54,14 @@ let add_production v p cfg =
 
 let add_productions v ps cfg =
   List.fold_left (fun cfg p -> add_production v p cfg) cfg ps
+
+let add_productionss ps cfg =
+  List.fold_left (fun cfg (v, p) -> add_production v p cfg) cfg ps
+
+let update_productions f cfg =
+  empty_cfg
+  |> add_entrypoints (entrypoints cfg)
+  |> (cfg
+      |> productions_list
+      |> List.concat_map (fun (n, p) -> f n p)
+      |> add_productionss)

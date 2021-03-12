@@ -1,4 +1,5 @@
 module AST = AST
+module Transform = Transform
 
 (** {2 AST} *)
 

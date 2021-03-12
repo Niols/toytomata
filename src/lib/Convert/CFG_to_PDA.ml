@@ -1,45 +1,6 @@
 module PDA = PushdownAutomaton
 module CFG = ContextFreeGrammar
 
-let replace_late_terminals_in_production replacements p =
-  let (_, p, replacements) =
-    List.fold_left
-      (fun (seen_nonterminal, p, replacements) -> function
-         | CFG.T a when seen_nonterminal ->
-           (
-             match List.assoc_opt a replacements with
-             | None ->
-               let v = CFG.fresh_nonterminal () in
-               (true, CFG.N v :: p, (a, v) :: replacements)
-             | Some v ->
-               (true, N v :: p, replacements)
-           )
-         | T a ->
-           (false, T a :: p, replacements)
-         | N v ->
-           (true, N v :: p, replacements))
-      (false, [], replacements)
-      p
-  in
-  (List.rev p, replacements)
-
-let replace_late_terminals cfg =
-  let (productions, replacements) =
-    List.fold_left
-      (fun (productions, replacements) (v, p) ->
-         let (p, replacements) = replace_late_terminals_in_production replacements p in
-         ((v, p) :: productions, replacements))
-      ([], [])
-      (CFG.productions_list cfg)
-  in
-  let productions =
-    productions @ List.map (fun (a, v) -> (v, [CFG.T a])) replacements
-  in
-  List.fold_left
-    (fun cfg (v, p) -> CFG.add_production v p cfg)
-    (CFG.empty_cfg |> CFG.add_entrypoints (CFG.entrypoints cfg))
-    productions
-
 type terminal_and_or_nonterminal =
   | OnlyTerminal of PDA.letter
   | OnlyNonTerminal of PDA.symbol
@@ -83,7 +44,7 @@ let rec production_to_pda pda ?pop ~from_ ~to_ = function
     )
 
 let cfg_to_pda cfg =
-  let cfg = replace_late_terminals cfg in
+  let cfg = CFG.Transform.term_right cfg in
   let q0 = PDA.fresh_state () in
   let q1 = PDA.fresh_state () in
   let pda =
