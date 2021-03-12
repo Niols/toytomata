@@ -36,6 +36,7 @@ val add_entrypoints : nonterminal list -> cfg -> cfg
 
 val add_production : nonterminal -> production -> cfg -> cfg
 val add_productions : nonterminal -> production list -> cfg -> cfg
+val add_productionss : (nonterminal * production) list -> cfg -> cfg
 
 val update_productions :
   (nonterminal -> production -> (nonterminal * production) list) -> cfg -> cfg

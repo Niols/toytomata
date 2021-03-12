@@ -5,6 +5,7 @@ let start cfg =
   empty_cfg
   |> add_entrypoint s0
   |> add_productions s0 (List.map (fun s -> [N s]) (entrypoints cfg))
+  |> add_productionss (productions_list cfg)
 
 let term_gen ~always cfg =
   let replacements = Hashtbl.create 8 in
@@ -46,23 +47,22 @@ let bin cfg =
         [(n, p)]
       else
         (
-          let (_, cur, rest) =
+          let (_, cur_n, cur_p, rest) =
             List.fold_left
-              (fun (seen_nonterminal, cur, rest) c ->
+              (fun (seen_nonterminal, cur_n, cur_p, rest) c ->
                  match c with
-                 | T a -> (seen_nonterminal, T a :: cur, rest)
+                 | T a -> (seen_nonterminal, cur_n, T a :: cur_p, rest)
                  | N n ->
                    if not seen_nonterminal then
-                     (true, N n :: cur, rest)
+                     (true, cur_n, N n :: cur_p, rest)
                    else
                      let n' = fresh_nonterminal () in
-                     let cur = N n' :: cur in
-                     (true, [N n], (List.rev cur) :: rest))
-              (false, [], [])
+                     let cur_p = N n' :: cur_p in
+                     (true, n', [N n], (cur_n, List.rev cur_p) :: rest))
+              (false, n, [], [])
               p
           in
-          List.rev cur :: rest
-          |> List.map (fun p -> (n, p))
+          (cur_n, List.rev cur_p) :: rest
         )
     )
 
