@@ -66,7 +66,36 @@ let bin cfg =
         )
     )
 
-let del _cfg = assert false
+let del cfg =
+  let rec nullable_nonterminals known =
+    let new_known =
+      List.fold_left
+        (fun known (n, p) ->
+           if List.for_all (function T _ -> false | N n -> NonTerminal.Set.mem n known) p then
+             NonTerminal.Set.add n known
+           else
+             known)
+        known
+        (productions_list cfg)
+    in
+    if NonTerminal.Set.equal known new_known then
+      known
+    else
+      nullable_nonterminals new_known
+  in
+  let nullable_nonterminals = nullable_nonterminals NonTerminal.Set.empty in
+  let is_nullable n = NonTerminal.Set.mem n nullable_nonterminals in
+  cfg
+  |> update_productions
+    (fun n p ->
+       List.fold_left
+         (fun ps c ->
+           match c with
+           | N n when is_nullable n -> List.map (fun p -> N n :: p) ps @ ps
+           | _ -> List.map (fun p -> c :: p) ps)
+         [[]] p
+       |> List.filter ((<>) [])
+       |> List.map (fun p -> (n, List.rev p)))
 
 let unit _cfg = assert false
 
