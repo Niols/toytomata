@@ -7,7 +7,7 @@ let make__nonterminal'__to__nonterminal () =
   match Hashtbl.find_opt table v with
   | Some v' -> v'
   | None ->
-    let v' = fresh_nonterminal () in
+    let v' = fresh_nonterminal ~hint:v () in
     Hashtbl.add table v v';
     v'
 
