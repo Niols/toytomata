@@ -114,7 +114,7 @@ let remove_unreachable cfg =
                 | _ -> reachable)
              reachable
              p)
-        reachable
+        (NonTerminal.Set.add n reachable)
   in
   let reachable =
     List.fold_left
