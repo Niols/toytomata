@@ -44,7 +44,7 @@ let rec production_to_pda pda ?pop ~from_ ~to_ = function
     )
 
 let cfg_to_pda cfg =
-  let cfg = CFG.Transform.term_right cfg in
+  let cfg = CFG.Transform.eliminate_terminals_after_nonterminal cfg in
   let q0 = PDA.fresh_state () in
   let q1 = PDA.fresh_state () in
   let pda =

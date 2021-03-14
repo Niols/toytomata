@@ -1,13 +1,13 @@
 open AST
 
-let start cfg =
+let extract_entrypoint cfg =
   let s0 = fresh_nonterminal ~hint:"S" () in
   empty_cfg
   |> add_entrypoint s0
   |> add_productions s0 (List.map (fun s -> [N s]) (entrypoints cfg))
   |> add_productionss (productions_list cfg)
 
-let term_gen ~always cfg =
+let gen_eliminate_terminals ~always cfg =
   let replacements = Hashtbl.create 8 in
   let replace a =
     match Hashtbl.find_opt replacements a with
@@ -32,10 +32,10 @@ let term_gen ~always cfg =
     )
   |> Hashtbl.fold (fun a na -> add_production na [T a]) replacements
 
-let term = term_gen ~always:true
-let term_right = term_gen ~always:false
+let eliminate_terminals = gen_eliminate_terminals ~always:true
+let eliminate_terminals_after_nonterminal = gen_eliminate_terminals ~always:false
 
-let bin cfg =
+let limit_to_two_nonterminals cfg =
   cfg
   |> update_productions (fun n p ->
       let nb_nonterminals =
@@ -66,7 +66,7 @@ let bin cfg =
         )
     )
 
-let del cfg =
+let inline_epsilon_productions cfg =
   let rec nullable_nonterminals known =
     let new_known =
       List.fold_left
@@ -97,7 +97,17 @@ let del cfg =
        |> List.filter ((<>) [])
        |> List.map (fun p -> (n, List.rev p)))
 
-let unit _cfg = assert false
+let merge_unit_productions _cfg = assert false
+
+let remove_unreachable _cfg = assert false
+
+(** {2 Chomsky Normal Form} *)
+
+let start = extract_entrypoint
+let term = eliminate_terminals
+let bin = limit_to_two_nonterminals
+let del = inline_epsilon_productions
+let unit = merge_unit_productions
 
 let chomsky_normal_form cfg =
   cfg |> start |> term |> bin |> del |> unit

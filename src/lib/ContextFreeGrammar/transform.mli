@@ -1,33 +1,53 @@
 open AST
 
-(** {1 Canonical Transformations of CFG} *)
+(** {1 Various Transformations of CFG} *)
 
-val start : cfg -> cfg
+val extract_entrypoint : cfg -> cfg
 (** Eliminate the entrypoint from right-hand sides. Returns a CFG recognising
    the same language but with only one entrypoint that does not appear on the
    right-hand side of rules.*)
 
-val term : cfg -> cfg
+val eliminate_terminals : cfg -> cfg
 (** Eliminate terminals from right-hand sides, except if there is only one
    terminal and non nonterminal. Returns a CFG recognising the same language but
    with rules producing either only nonterminals or only one terminal. *)
 
-val term_right : cfg -> cfg
-(** Same as {!term} except only at the right of nonterminals. *)
+val eliminate_terminals_after_nonterminal : cfg -> cfg
+(** Same as {!eliminate_terminals} except only at the right of nonterminals. *)
+
+val limit_to_two_nonterminals : cfg -> cfg
+(** Eliminate right-hand sides with more than two nonterminals. Returns a CFG
+    recognising the same language but with rules producing at most two
+    nonterminals. *)
+
+val inline_epsilon_productions : cfg -> cfg
+(** Eliminate ε-productions. Returns a CFG recognising the same language but
+   with no ε-production, except possibly on the entrypoints. *)
+
+val merge_unit_productions : cfg -> cfg
+(** Eliminate unit productions, that is productions that contain only one
+    nonterminal. Returns a CFG recognising the same language but without such
+    productions. *)
+
+val remove_unreachable : cfg -> cfg
+(** Remove unreachable nonterminals for the grammar. *)
+
+(** {2 Chomsky Normal Form} *)
+
+val start : cfg -> cfg
+(** Alias for {extract_entrypoint}. *)
+
+val term : cfg -> cfg
+(** Alias for {!eliminate_terminals}. *)
 
 val bin : cfg -> cfg
-(** Eliminate right-hand sides with more than two nonterminals. Returns a CFG
-   recognising the same language but with rules producing at most two
-   nonterminals. *)
+(** Alias for {!limit_to_two_nonterminals}. *)
 
 val del : cfg -> cfg
-(** Eliminate ε-productions. Returns a CFG recognising the same language but
-   with no ε-production. *)
+(** Alias for {!inline_epsilon_productions}. *)
 
 val unit : cfg -> cfg
-(** Eliminate unit productions, that is productions that contain only one
-   nonterminal. Returns a CFG recognising the same language but without such
-   productions. *)
+(** Alias for {!merge_unit_productions}. *)
 
 val chomsky_normal_form : cfg -> cfg
 (** Successive application of start, term, bin, del and unit. Returns a CFG
