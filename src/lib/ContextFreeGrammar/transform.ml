@@ -99,7 +99,36 @@ let inline_epsilon_productions cfg =
 
 let merge_unit_productions _cfg = assert false
 
-let remove_unreachable _cfg = assert false
+let remove_unreachable cfg =
+  let rec compute_reachable reachable n =
+    if NonTerminal.Set.mem n reachable then
+      reachable
+    else
+      cfg
+      |> productions ~from_:n
+      |> Seq.fold_left
+        (fun reachable (_, p) ->
+           List.fold_left
+             (fun reachable -> function
+                | N n -> compute_reachable reachable n
+                | _ -> reachable)
+             reachable
+             p)
+        reachable
+  in
+  let reachable =
+    List.fold_left
+      compute_reachable
+      NonTerminal.Set.empty
+      (entrypoints cfg)
+  in
+  update_productions
+    (fun n p ->
+       if NonTerminal.Set.mem n reachable then
+         [(n, p)]
+       else
+         [])
+    cfg
 
 (** {2 Chomsky Normal Form} *)
 

@@ -16,8 +16,14 @@ type production = component list
 
 val entrypoints : cfg -> nonterminal list
 
-val productions : cfg -> (nonterminal * production) Seq.t
-val productions_list : cfg -> (nonterminal * production) list
+val productions :
+  ?from_:nonterminal ->
+  cfg -> (nonterminal * production) Seq.t
+
+val productions_list :
+  ?from_:nonterminal ->
+  cfg -> (nonterminal * production) list
+(** Same as {!productions} but returns a list. *)
 
 val nonterminals : cfg -> nonterminal list
 

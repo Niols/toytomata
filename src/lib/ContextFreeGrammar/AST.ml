@@ -17,8 +17,15 @@ and cfg =
 
 let entrypoints cfg = cfg.entrypoints
 
-let productions_list cfg = cfg.productions
-let productions cfg = productions_list cfg |> List.to_seq
+let productions ?from_ cfg =
+  cfg.productions
+  |> List.to_seq
+  |> (match from_ with
+      | None -> Fun.id
+      | Some n -> Seq.filter (fun (n', _) -> NonTerminal.equal n n'))
+
+let productions_list ?from_ cfg =
+  List.of_seq (productions ?from_ cfg)
 
 let nonterminals_from_production =
   List.filter_map (function N v -> Some v | _ -> None)
