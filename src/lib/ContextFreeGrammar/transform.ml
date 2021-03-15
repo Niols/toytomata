@@ -97,7 +97,67 @@ let inline_epsilon_productions cfg =
        |> List.filter ((<>) [])
        |> List.map (fun p -> (n, List.rev p)))
 
-let merge_unit_productions _cfg = assert false
+let merge_unit_cycles cfg =
+  (* Kosaraju's algorithm [Aho et al. 1983] for strongly connected components.
+     FIXME: such algorithms should be taken from the library OCamlGraph. *)
+  let rec visit visited l n =
+    if NonTerminal.Set.mem n visited then
+      (visited, l)
+    else
+      let (visited, l) =
+        Seq.fold_left
+          (fun (visited, l) (_, p) ->
+             match p with
+             | [N n'] -> visit visited l n'
+             | _ -> (visited, l)
+          )
+          (NonTerminal.Set.add n visited, l)
+          (productions ~from_:n cfg)
+      in
+      (visited, n :: l)
+  in
+  let (_, l) =
+    List.fold_left
+      (fun (visited, l) n ->
+         visit visited l n)
+      (NonTerminal.Set.empty, [])
+      (nonterminals cfg)
+  in
+  let replacement = Hashtbl.create 8 in
+  let rec assign n root =
+    match Hashtbl.find_opt replacement n with
+    | Some _ -> ()
+    | None ->
+      Hashtbl.add replacement n root;
+      Seq.iter
+        (fun (n', p) ->
+           match p with
+           | [N n0] when NonTerminal.equal n n0 -> assign n' root
+           | _ -> ())
+        (productions cfg)
+  in
+  List.iter (fun n -> assign n n) l;
+  (* This gives us a hashtable [replacement] in which all nonterminals point to
+     the representant of their component. We can then use this table to rewrite
+     the grammar. *)
+  let replace n = Hashtbl.find replacement n in
+  let cfg' =
+    empty_cfg
+    |> add_entrypoints (entrypoints cfg |> List.map replace)
+  in
+  Seq.fold_left
+    (fun cfg' (n, p) ->
+       let n = replace n in
+       let p = List.map (function T a -> T a | N n' -> N (replace n')) p in
+       match p with
+       | [N n'] when NonTerminal.equal n n' -> cfg'
+       | _ -> add_production n p cfg')
+    cfg'
+    (productions cfg)
+
+let inline_unit_productions cfg =
+  let _cfg = merge_unit_cycles cfg in
+  assert false
 
 let remove_unreachable cfg =
   let rec compute_reachable reachable n =
@@ -136,7 +196,7 @@ let start = extract_entrypoint
 let term = eliminate_terminals
 let bin = limit_to_two_nonterminals
 let del = inline_epsilon_productions
-let unit = merge_unit_productions
+let unit = inline_unit_productions
 
 let chomsky_normal_form cfg =
   cfg |> start |> term |> bin |> del |> unit

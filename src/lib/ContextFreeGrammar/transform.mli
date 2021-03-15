@@ -24,15 +24,23 @@ val inline_epsilon_productions : cfg -> cfg
 (** Eliminate ε-productions. Returns a CFG recognising the same language but
    with no ε-production, except possibly on the entrypoints. *)
 
-val merge_unit_productions : cfg -> cfg
-(** Eliminate unit productions, that is productions that contain only one
-    nonterminal. Returns a CFG recognising the same language but without such
-    productions. *)
+val merge_unit_cycles : cfg -> cfg
+(** Merge unit cycles, that is cycles formed by productions of the form [A ->
+   B]. When such a cycle occurs, the nonterminals all recognise the same
+   language and can be merged together. Returns a CFG recognising the same
+   language but without such cycles. *)
+
+val inline_unit_productions : cfg -> cfg
+(** Inline unit productions, that is productions of the form [A -> B]. We can
+   replace such productions by inline the productions of [B] inside [A]. Returns
+   a CFG recognising the same language but without such productions. *)
 
 val remove_unreachable : cfg -> cfg
 (** Remove unreachable nonterminals for the grammar. *)
 
-(** {2 Chomsky Normal Form} *)
+(** {2 Chomsky Normal Form}
+
+    Following the presentation of [Lange & Leiß 2009]. *)
 
 val start : cfg -> cfg
 (** Alias for {extract_entrypoint}. *)
@@ -47,7 +55,7 @@ val del : cfg -> cfg
 (** Alias for {!inline_epsilon_productions}. *)
 
 val unit : cfg -> cfg
-(** Alias for {!merge_unit_productions}. *)
+(** Alias for {!inline_unit_productions}. *)
 
 val chomsky_normal_form : cfg -> cfg
 (** Successive application of start, term, bin, del and unit. Returns a CFG
