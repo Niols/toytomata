@@ -16,6 +16,9 @@ See Also
 References
 ----------
 
+**[Aho *et al.* 1983]** Alfred V. Aho, John E. Hopcroft and Jeffrey D. Ullman.
+*Data Structures and Algorithms*. Addison-Wesley, 1983.
+
 **[Lange & Leiß 2009]** Martin Lange and Hans Leiß. “To CNF or not to CNF? An
 Efficient Yet Presentable Version of the CYK Algorithm”. In *Informatica
 Didactica*, volume 8, 2009.
