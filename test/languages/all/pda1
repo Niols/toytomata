@@ -1,0 +1,3 @@
+initial q;
+final q;
+q -> q via a or b;
