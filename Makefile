@@ -20,4 +20,5 @@ uninstall:
 
 clean:
 	dune clean
+	rm -f *.opam
 	rm -f bin lib doc
