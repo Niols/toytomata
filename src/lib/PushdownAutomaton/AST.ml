@@ -1,3 +1,4 @@
+open Ext
 open Common
 
 module State = Element.Make(struct end)

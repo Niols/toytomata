@@ -1,3 +1,4 @@
+open Ext
 open Common
 
 module NonTerminal = Element.Make(struct end)

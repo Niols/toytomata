@@ -1,3 +1,4 @@
+open Ext
 open Toytomata
 
 let pf = Format.printf

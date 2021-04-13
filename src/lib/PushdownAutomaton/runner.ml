@@ -1,4 +1,4 @@
-open Common
+open Ext
 open AST
 
 type word = letter list

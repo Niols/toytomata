@@ -15,5 +15,5 @@ let pop s =
   | None -> failwith "Stack.pop"
   | Some (x, s) -> (x, s)
 
-let equal = List.equal
-let compare = List.compare
+let equal = ExtList.equal
+let compare = ExtList.compare

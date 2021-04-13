@@ -1,5 +1,5 @@
 (executable
  (name toytomata)
  (public_name toytomata)
- (libraries toytomata)
+ (libraries toytomata.ext toytomata)
  (preprocess (pps ppx_deriving.std)))

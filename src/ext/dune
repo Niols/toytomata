@@ -1,0 +1,4 @@
+(library
+ (name ext)
+ (public_name toytomata.ext)
+ (preprocess (pps ppx_deriving.std)))

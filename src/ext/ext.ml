@@ -1,6 +1,5 @@
-module Stack = Stack
-module CSTHelpers = CSTHelpers
-module Element = Element
+module List = ExtList
+module Stack = ExtStack
 
 type 'a stack = 'a Stack.t
 
