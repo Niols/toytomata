@@ -2,6 +2,10 @@ name: CI
 
 on: push
 
+defaults:
+  run:
+    shell: bash --login -e {0}
+
 jobs:
   test:
     runs-on: ubuntu-20.04
@@ -10,19 +14,22 @@ jobs:
         run: sudo apt-get install ocaml opam
 
       - name: Initialise OPAM
-        run: opam init --compiler=ocaml-system
+        run: opam init --auto-setup --compiler=ocaml-system
+
+      - name: Install Dune
+        run: opam install -y dune
 
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Install Dune & Dependencies
-        run: opam install -y dune ppx_deriving
+      - name: Install Dependencies
+        run: opam install -y odoc menhir $(dune external-lib-deps @all | sed -n 's|- \(.*\)\..*|\1|p')
 
       - name: Build
-        run: eval $(opam env) && make build
+        run: make build
 
       - name: Build Documentation
-        run: eval $(opam env) && make doc
+        run: make doc
 
       - name: Run Test
-        run: eval $(opam env) && make test
+        run: make test
