@@ -1,0 +1,28 @@
+name: CI
+
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Install OCaml & OPAM
+        run: sudo apt-get install ocaml opam
+
+      - name: Initialise OPAM
+        run: opam init --compiler=ocaml-system
+
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Install Dune & Dependencies
+        run: opam install -y dune ppx_deriving
+
+      - name: Build
+        run: eval $(opam env) && make build
+
+      - name: Build Documentation
+        run: eval $(opam env) && make doc
+
+      - name: Run Test
+        run: eval $(opam env) && make test
