@@ -1,4 +1,4 @@
-.PHONY: build doc test clean
+.PHONY: build doc test install uninstall clean
 
 build:
 	dune build @install
@@ -11,6 +11,12 @@ doc:
 
 test:
 	dune test
+
+install:
+	dune install
+
+uninstall:
+	dune uninstall
 
 clean:
 	dune clean

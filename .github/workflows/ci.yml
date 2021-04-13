@@ -25,11 +25,20 @@ jobs:
       - name: Install Dependencies
         run: opam install -y odoc menhir $(dune external-lib-deps @all | sed -n 's|- \(.*\)\..*|\1|p')
 
-      - name: Build
+      - name: Try Building
         run: make build
 
-      - name: Build Documentation
+      - name: Try Building Documentation
         run: make doc
 
-      - name: Run Test
+      - name: Run Tests
         run: make test
+
+      - name: Try Installing
+        run: make install
+
+      - name: Try Uninstalling
+        run: make uninstall
+
+      - name: Try Cleaning
+        run: make clean
