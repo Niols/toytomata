@@ -43,7 +43,7 @@ val remove_unreachable : cfg -> cfg
     Following the presentation of [Lange & Leiß 2009]. *)
 
 val start : cfg -> cfg
-(** Alias for {extract_entrypoint}. *)
+(** Alias for {!extract_entrypoint}. *)
 
 val term : cfg -> cfg
 (** Alias for {!eliminate_terminals}. *)
