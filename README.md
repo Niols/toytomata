@@ -3,12 +3,23 @@ Toytomata
 
 *Work in Progress*
 
+Toytomata is an executable and a library that aim at helping with automata
+courses. The goal is to allow both students and teachers to enter
+language-related objects (automata, regular expressions, grammars, etc.) in a
+simple way and to run some usual operations on them. The main usage is to help
+check that different objects (and automaton and a grammar, for instance)
+recognise the same language, or to give a counter-example. This can be useful
+when grading, for instance, to compare a solution with the problem statement.
+
 See Also
 --------
 
-- [Automata Tutor v3](https://automata-tutor.model.in.tum.de/)
+- [Automata Tutor v3](https://automata-tutor.model.in.tum.de/), a website
+  containing automatically-checked exercises on language-related objects.
 
-- http://automatonsimulator.com/
+- [Automaton Simulator](http://automatonsimulator.com/), a website which allows
+  you to define automata using a graphical interface and to check whether they
+  recognise words or not.
 
 - [CFG](https://mmottl.github.io/cfg/), an OCaml library for analysing and
   manipulating context-free grammars.
