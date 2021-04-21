@@ -1,0 +1,10 @@
+(library
+ (name LanguageRepresentation)
+ (public_name toytomata.language-representation)
+ (libraries
+  toytomata.ext
+  toytomata.common
+  toytomata.context-free-grammar
+  toytomata.pushdown-automaton
+  toytomata.convert)
+ (preprocess (pps ppx_deriving.std)))
