@@ -36,3 +36,10 @@ let to_string = function
 let to_file fname = function
   | CFG cfg -> ContextFreeGrammar.to_file fname cfg
   | PDA pda -> PushdownAutomaton.to_file fname pda
+
+let accepts repr _word =
+  match repr with
+  | CFG _cfg -> assert false
+  | PDA pda ->
+    let _cfg = Convert.PDA_to_CFG.pda_to_cfg pda in
+    assert false
