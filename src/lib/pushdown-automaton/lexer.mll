@@ -11,7 +11,7 @@ let newline = '\r' | '\n' | "\r\n"
 
 rule read = parse
   | white         { read lexbuf }
-  | newline       { Lexing.new_line lexbuf; read lexbuf }
+  | newline       { Lexing.new_line lexbuf; NEWLINE }
 
   | "initial" | "initials" { INITIAL }
   | "final" | "finals"     { FINAL }

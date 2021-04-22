@@ -8,8 +8,9 @@
 
 %token RIGHTARROW
 %token SEMICOLON
-%token PIPE
+%token NEWLINE
 %token COMMA
+%token PIPE
 
 %token EOF
 
@@ -23,7 +24,8 @@ cfg:
 ;;
 
 terminated_rule:
-| r=located(rule) SEMICOLON { r }
+| rule=located(rule) SEMICOLON { rule }
+| rule=located(rule) NEWLINE   { rule }
 ;;
 
 rule:

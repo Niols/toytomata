@@ -10,7 +10,7 @@ let newline = '\r' | '\n' | "\r\n"
 
 rule read = parse
   | white         { read lexbuf }
-  | newline       { Lexing.new_line lexbuf; read lexbuf }
+  | newline       { Lexing.new_line lexbuf; NEWLINE }
   | terminal      { TERMINAL (Lexing.lexeme lexbuf) }
   | nonterminal   { NONTERMINAL (Lexing.lexeme lexbuf) }
 
@@ -26,5 +26,5 @@ rule read = parse
 
   | _    { Common.CSTHelpers.syntax_error "Unexpected character: %s" (Lexing.lexeme lexbuf) }
 
-(* FIXME: brackets for longer states*)
+(* FIXME: brackets for longer states *)
 (* FIXME: pos in syntax_error *)

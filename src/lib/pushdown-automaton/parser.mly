@@ -9,6 +9,7 @@
 
 %token RIGHTARROW
 %token SEMICOLON
+%token NEWLINE
 %token COMMA
 %token DDASH
 %token SLASH
@@ -27,7 +28,8 @@ pda:
 ;;
 
 terminated_rule:
-| r=located(rule) SEMICOLON { r }
+| rule=located(rule) SEMICOLON { rule }
+| rule=located(rule) NEWLINE   { rule }
 ;;
 
 rule:
