@@ -1,6 +1,3 @@
-module PDA = PushdownAutomaton
-module CFG = ContextFreeGrammar
-
 type terminal_and_or_nonterminal =
   | OnlyTerminal of PDA.letter
   | OnlyNonTerminal of PDA.symbol

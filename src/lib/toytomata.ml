@@ -4,33 +4,33 @@
 
 (** {2 ContextFreeGrammar} *)
 
-type cfg = ContextFreeGrammar.cfg
+type cfg = CFG.cfg
 
 (** {3 Parsing & Printing} *)
 
-let cfg_from_channel = ContextFreeGrammar.from_channel
-let cfg_from_string = ContextFreeGrammar.from_string
-let cfg_from_file = ContextFreeGrammar.from_file
+let cfg_from_channel = CFG.from_channel
+let cfg_from_string = CFG.from_string
+let cfg_from_file = CFG.from_file
 
-let pp_cfg = ContextFreeGrammar.pp
-let cfg_to_channel = ContextFreeGrammar.to_channel
-let cfg_to_string = ContextFreeGrammar.to_string
-let cfg_to_file = ContextFreeGrammar.to_file
+let pp_cfg = CFG.pp
+let cfg_to_channel = CFG.to_channel
+let cfg_to_string = CFG.to_string
+let cfg_to_file = CFG.to_file
 
 (** {2 PushdownAutomaton} *)
 
-type pda = PushdownAutomaton.pda
+type pda = PDA.pda
 
 (** {3 Parsing & Printing} *)
 
-let pda_from_channel = PushdownAutomaton.from_channel
-let pda_from_string = PushdownAutomaton.from_string
-let pda_from_file = PushdownAutomaton.from_file
+let pda_from_channel = PDA.from_channel
+let pda_from_string = PDA.from_string
+let pda_from_file = PDA.from_file
 
-let pp_pda = PushdownAutomaton.pp
-let pda_to_channel = PushdownAutomaton.to_channel
-let pda_to_string = PushdownAutomaton.to_string
-let pda_to_file = PushdownAutomaton.to_file
+let pp_pda = PDA.pp
+let pda_to_channel = PDA.to_channel
+let pda_to_string = PDA.to_string
+let pda_to_file = PDA.to_file
 
 (** {2 Conversions} *)
 
@@ -41,7 +41,5 @@ let pda_to_cfg = Convert.PDA_to_CFG.pda_to_cfg
 
 module Common = Common
 module Convert = Convert
-module ContextFreeGrammar = ContextFreeGrammar
-module PushdownAutomaton = PushdownAutomaton
-module CFG = ContextFreeGrammar
-module PDA = PushdownAutomaton
+module CFG = CFG
+module PDA = PDA

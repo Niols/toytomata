@@ -2,7 +2,7 @@
 (menhir (modules parser))
 
 (library
- (name PushdownAutomaton)
- (public_name toytomata.pushdown-automaton)
+ (name PDA)
+ (public_name toytomata.pda)
  (libraries toytomata.ext toytomata.common)
  (preprocess (pps ppx_deriving.std)))

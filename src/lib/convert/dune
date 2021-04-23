@@ -2,7 +2,7 @@
  (name convert)
  (public_name toytomata.convert)
  (libraries
-  toytomata.context-free-grammar
-  toytomata.pushdown-automaton
+  toytomata.cfg
+  toytomata.pda
   toytomata.common)
  (preprocess (pps ppx_deriving.std)))

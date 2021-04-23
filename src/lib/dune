@@ -4,5 +4,6 @@
  (libraries
   toytomata.common
   toytomata.convert
-  toytomata.context-free-grammar
-  toytomata.pushdown-automaton))
+  toytomata.language-representation
+  toytomata.cfg
+  toytomata.pda))

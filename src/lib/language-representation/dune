@@ -4,7 +4,7 @@
  (libraries
   toytomata.ext
   toytomata.common
-  toytomata.context-free-grammar
-  toytomata.pushdown-automaton
+  toytomata.cfg
+  toytomata.pda
   toytomata.convert)
  (preprocess (pps ppx_deriving.std)))

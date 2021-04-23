@@ -2,7 +2,7 @@
 (menhir (modules parser))
 
 (library
- (name ContextFreeGrammar)
- (public_name toytomata.context-free-grammar)
+ (name CFG)
+ (public_name toytomata.cfg)
  (libraries toytomata.ext toytomata.common)
  (preprocess (pps ppx_deriving.std)))
