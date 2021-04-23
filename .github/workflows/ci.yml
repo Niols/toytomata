@@ -1,47 +1,62 @@
 name: CI
 
-on: push
-
-defaults:
-  run:
-    shell: bash --login -e {0}
+on:
+  - pull_request
+  - push
 
 jobs:
-  test:
-    runs-on: ubuntu-20.04
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        ocaml-version:
+          - 4.08.1
+          - 4.09.1
+          - 4.10.2
+          - 4.11.2
+          - 4.12.0
+        include:
+          - { os: macos-latest, ocaml-version: 4.12.0 }
+          - { os: windows-latest, ocaml-version: 4.12.0 }
+
+    runs-on: ${{ matrix.os }}
+
     steps:
-      - name: Install OCaml & OPAM
-        run: sudo apt-get install ocaml opam
-
-      - name: Initialise OPAM
-        run: opam init --auto-setup --compiler=ocaml-system
-
-      - name: Install Dune
-        run: opam install -y dune
-
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      - name: Install Dependencies
-        run: dune build 2>/dev/null || true; opam install -y menhir; opam install -y . --deps-only --with-doc --with-test
-        ## FIXME: this line is a bit twisted because of two bugs:
-        ## - The explicit installation of Menhir is here to mitigate #4486.
-        ## - The caught failure (; instead of &&) of dune build is here to mitigate #4487.
+      - name: Use OCaml ${{ matrix.ocaml-version }}
+        uses: avsm/setup-ocaml@v1
+        with:
+          ocaml-version: ${{ matrix.ocaml-version }}
+
+      - name: Install Dune
+        run: opam install dune --yes
+
+      - name: Install OPAM Dependencies
+        run: |
+          opam exec -- dune build || true
+          opam install --yes menhir
+          opam install . --yes --deps-only --with-doc --with-test
+        ## FIXME: The caught failure of dune build is here to mitigate #4487.
+        ## FIXME: The explicit installation of Menhir is here to mitigate #4486.
 
       - name: Try Building
-        run: make build
+        run: opam exec -- make build
 
       - name: Try Building Documentation
-        run: make doc
+        run: opam exec -- make doc
 
       - name: Run Tests
-        run: make test
+        run: opam exec -- make test
 
       - name: Try Installing
-        run: make install
+        run: opam exec -- make install
 
       - name: Try Uninstalling
-        run: make uninstall
+        run: opam exec -- make uninstall
 
       - name: Try Cleaning
-        run: make clean
+        run: opam exec -- make clean
