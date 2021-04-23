@@ -1,6 +1,10 @@
 module AST = AST
 module Transform = Transform
+
+(** {2 AST} *)
+
 include AST
+type cfg = AST.cfg
 
 (** {2 CST Parsing & Printing} *)
 
