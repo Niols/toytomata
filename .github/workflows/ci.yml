@@ -60,3 +60,18 @@ jobs:
 
       - name: Try Cleaning
         run: opam exec -- make clean
+
+      - name: Auto-Deploy Documentation
+        run: |
+          opam exec -- make doc
+          mkdir tmp
+          cp -R doc/* tmp
+          opam exec -- make clean
+          git config user.name "GitHub"
+          git config user.email "noreply@github.com"
+          git fetch origin documentation
+          git checkout documentation
+          ./integrate-documentation tmp/ ${{github.ref}} ${{github.sha}}
+          git commit -m "Auto-deploy from GitHub Action #$GITHUB_RUN_NUMBER"
+          git push origin documentation
+        if: runner.os == 'Linux' && matrix.ocaml-version == '4.10.2' && github.event_name == 'push'
