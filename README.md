@@ -11,6 +11,8 @@ check that different objects (and automaton and a grammar, for instance)
 recognise the same language, or to give a counter-example. This can be useful
 when grading, for instance, to compare a solution with the problem statement.
 
+The API documentation is available [here](https://niols.github.io/toytomata/).
+
 See Also
 --------
 
