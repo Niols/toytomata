@@ -38,10 +38,8 @@ jobs:
       - name: Install OPAM Dependencies
         run: |
           opam exec -- dune build || true
-          opam install --yes menhir
           opam install . --yes --deps-only --with-doc --with-test
         ## FIXME: The caught failure of dune build is here to mitigate #4487.
-        ## FIXME: The explicit installation of Menhir is here to mitigate #4486.
 
       - name: Try Building
         run: opam exec -- make build

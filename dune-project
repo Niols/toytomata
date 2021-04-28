@@ -13,4 +13,5 @@
  (name toytomata)
  (synopsis "An executable and library to help with automata courses")
  (depends
-  ppx_deriving))
+  ppx_deriving
+  (menhir :build)))
