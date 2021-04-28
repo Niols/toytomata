@@ -18,6 +18,9 @@ esac
 ref=${FULL_REF#*/}
 target=$TO/$kind/$ref
 
+## Add the new documentation as a sub-directory of the documentation. If this is
+## a branch, write the commit hash to a specific file.
+
 rm -rf "$target"
 mkdir -p "$target"
 mv "$FROM"/* "$target"
@@ -25,6 +28,9 @@ mv "$FROM"/* "$target"
 if [ "$kind" = branch ]; then
     echo "$HASH" | head -c 7 > "$target"/commit-hash
 fi
+
+## Replace the index of the newly-added documentation by a redirection to the
+## global index.
 
 rm -f "$target"/index.html
 cat <<EOF > "$target"/index.html
@@ -39,6 +45,10 @@ cat <<EOF > "$target"/index.html
 </html>
 EOF
 
+## Regenerate the global index page to take into account the newly-added
+## documentation.
+
+"$TO"/index.html
 {
     cat <<EOF
 <!DOCTYPE html>
@@ -120,4 +130,7 @@ EOF
 EOF
 } > "$TO"/index.html
 
-git add "$TO"
+## Stage all the newly-added files.
+
+git add "$target"
+git add "$TO"/index.html
