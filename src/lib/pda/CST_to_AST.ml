@@ -4,14 +4,8 @@ open AST
 let v = CSTHelpers.value
 
 let make__state'__to__state () =
-  let table = Hashtbl.create 8 in
-  CSTHelpers.map_ignore_located @@ fun q ->
-  match Hashtbl.find_opt table q with
-  | Some q' -> q'
-  | None ->
-    let q' = fresh_state () in
-    Hashtbl.add table q q';
-    q'
+  CSTHelpers.map_ignore_located @@
+  Converter.make_convert (fun _ -> fresh_state ())
 
 let letter__to__letter = Fun.id
 let letter'__to__letter a = CSTHelpers.map_ignore_located letter__to__letter a

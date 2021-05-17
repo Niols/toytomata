@@ -2,14 +2,8 @@ open Common
 open AST
 
 let make__nonterminal'__to__nonterminal () =
-  let table = Hashtbl.create 8 in
-  CSTHelpers.map_ignore_located @@ fun v ->
-  match Hashtbl.find_opt table v with
-  | Some v' -> v'
-  | None ->
-    let v' = fresh_nonterminal ~hint:v () in
-    Hashtbl.add table v v';
-    v'
+  CSTHelpers.map_ignore_located @@
+  Converter.make_convert (fun v -> fresh_nonterminal ~hint:v ())
 
 let component__to__component n'2n  = function
   | CST.T a -> T (CSTHelpers.value a)

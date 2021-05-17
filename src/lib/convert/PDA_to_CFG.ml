@@ -1,3 +1,5 @@
+open Common
+
 let split_pop_push pda =
   List.fold_left
     (fun pda' (q, q', (a, s, s')) ->
@@ -15,14 +17,8 @@ let split_pop_push pda =
 
 let pda_to_cfg pda =
   let nonterminal_of_states_pair =
-    let table = Hashtbl.create 8 in
-    fun q q' ->
-      match Hashtbl.find_opt table (q, q') with
-      | Some v -> v
-      | None ->
-        let v = CFG.fresh_nonterminal () in
-        Hashtbl.add table (q, q') v;
-        v
+    let convert = Converter.make_convert (fun _ -> CFG.fresh_nonterminal ()) in
+    fun q q' -> convert (q, q')
   in
   let pda = split_pop_push pda in
   let cfg = CFG.empty_cfg in

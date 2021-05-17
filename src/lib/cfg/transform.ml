@@ -1,3 +1,4 @@
+open Common
 open AST
 
 let extract_entrypoint cfg =
@@ -8,15 +9,8 @@ let extract_entrypoint cfg =
   |> add_productionss (productions_list cfg)
 
 let gen_eliminate_terminals ~always cfg =
-  let replacements = Hashtbl.create 8 in
-  let replace a =
-    match Hashtbl.find_opt replacements a with
-    | Some n -> n
-    | None ->
-      let na = fresh_nonterminal ~hint:("N"^a) () in
-      Hashtbl.add replacements a na;
-      na
-  in
+  let replacements = Converter.make_converter (fun a -> fresh_nonterminal ~hint:("N"^a) ()) in
+  let replace = Converter.convert replacements in
   cfg
   |> update_productions (fun n p ->
       [(n,
@@ -30,7 +24,7 @@ let gen_eliminate_terminals ~always cfg =
         |> snd
         |> List.rev)]
     )
-  |> Hashtbl.fold (fun a na -> add_production na [T a]) replacements
+  |> Hashtbl.fold (fun a na -> add_production na [T a]) replacements.table
 
 let eliminate_terminals = gen_eliminate_terminals ~always:true
 let eliminate_terminals_after_nonterminal = gen_eliminate_terminals ~always:false
