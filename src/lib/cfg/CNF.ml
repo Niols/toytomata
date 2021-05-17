@@ -54,6 +54,7 @@ let from_cfg cfg =
   { empty = !empty; t_prod; nt_prod; hints }
 
 type parsetree =
+  | EProd
   | TProd of terminal
   | NTProd of (int * parsetree) * (int * parsetree)
 
@@ -103,9 +104,18 @@ let parse g s =
 
   p.(n-1).(0).(0)
 
+let parse g s =
+  if s = [||] then
+    if g.empty then Some EProd
+    else None
+  else parse g s
+
 let pp_parsetree g fmt (i, pt) =
   let rec pp_parsetree fmt (i, pt) =
     match pt with
+    | EProd ->
+      Format.fprintf fmt "%s -> ε"
+        (NonTerminal.to_string g.hints.(i))
     | TProd t ->
       Format.fprintf fmt "%s -> %s"
         (NonTerminal.to_string g.hints.(i))
