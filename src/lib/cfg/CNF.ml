@@ -103,6 +103,23 @@ let parse g s =
 
   p.(n-1).(0).(0)
 
+let pp_parsetree g fmt (i, pt) =
+  let rec pp_parsetree fmt (i, pt) =
+    match pt with
+    | TProd t ->
+      Format.fprintf fmt "%s -> %s"
+        (NonTerminal.to_string g.hints.(i))
+        t
+    | NTProd ((b, ptb), (c, ptc)) ->
+      Format.fprintf fmt "@[<h 2>%s -> %s %s@\n%a@\n%a@]"
+        (NonTerminal.to_string g.hints.(i))
+        (NonTerminal.to_string g.hints.(b))
+        (NonTerminal.to_string g.hints.(c))
+        pp_parsetree (b, ptb)
+        pp_parsetree (c, ptc)
+  in
+  pp_parsetree fmt (i, pt)
+
 let accepts g s =
   parse g s <> None
 
