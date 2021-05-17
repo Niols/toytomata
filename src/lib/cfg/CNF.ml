@@ -64,30 +64,30 @@ let accepts g s =
   (* p[l,i,nt] will be set to [true] if the substring of length [l+1] starting
      from [i] can be generated from the nonterminal [nt]. *)
   let p =
-    Array.init (1 + n) @@ fun _ ->
-    Array.init (1 + n) @@ fun _ ->
+    Array.init n @@ fun l ->
+    Array.init (n-l) @@ fun _ ->
     Array.make r false
   in
 
-  for i = 1 to n do
+  for i = 0 to n-1 do
     Array.iteri
       (fun nt ts ->
          List.iter
            (fun t ->
-              if t = s.(i-1) then
-                p.(1).(i).(nt) <- true)
+              if t = s.(i) then
+                p.(0).(i).(nt) <- true)
            ts)
       g.t_prod
   done;
 
-  for l = 2 to n do (* length of span *)
-    for i = 1 to n-l+1 do (* start of span *)
-      for k = 1 to l-1 do (* partition of span *)
+  for l = 1 to n-1 do (* length of span *)
+    for i = 0 to n-l-1 do (* start of span *)
+      for k = 0 to l-1 do (* partition of span *)
         Array.iteri
           (fun nt ntps ->
              List.iter
                (fun (b, c) ->
-                  if p.(k).(i).(b) && p.(l-k).(i+k).(c) then
+                  if p.(k).(i).(b) && p.(l-k-1).(i+k+1).(c) then
                     p.(l).(i).(nt) <- true)
                ntps)
           g.nt_prod
@@ -95,7 +95,7 @@ let accepts g s =
     done
   done;
 
-  p.(n).(1).(0)
+  p.(n-1).(0).(0)
 
 let%test_module _ =
   (module struct
