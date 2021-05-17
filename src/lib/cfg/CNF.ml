@@ -52,3 +52,81 @@ let from_cfg cfg =
 
   (* Return *)
   { empty = !empty; t_prod; nt_prod; hints }
+
+let cyk g s =
+  (* input: grammar g containing [r] nonterminals [0] to [r-1] with start symbol [0]. *)
+  (* input: an array s consisting of [n] "characters" [s0] to [sn-1]. *)
+  let r = Array.length g.nt_prod in
+  let n = Array.length s in
+
+  (* create an array of booleans of sizes n, n and r initialised to [false].
+     actually, we do not need all of the second [n]. *)
+  (* p[l,i,nt] will be set to [true] if the substring of length [l+1] starting
+     from [i] can be generated from the nonterminal [nt]. *)
+  let p =
+    Array.init n @@ fun l ->
+    Array.init (n-l) @@ fun _ ->
+    Array.make r false
+  in
+
+  for i = 0 to n-1 do
+    Array.iteri
+      (fun nt ts ->
+         List.iter
+           (fun t ->
+              if t = s.(i) then
+                p.(0).(i).(nt) <- true)
+           ts)
+      g.t_prod
+  done;
+
+  for l = 1 to n-1 do (* length of span *)
+    for i = 0 to n-l do (* start of span *)
+      for k = 0 to l-1 do (* partition of span *)
+        Array.iteri
+          (fun nt ntps ->
+             List.iter
+               (fun (b, c) ->
+                  if p.(k).(i).(b) && p.(l-k-1).(i+k+1).(c) then
+                    p.(l).(i).(nt) <- true)
+               ntps)
+          g.nt_prod
+      done
+    done
+  done;
+
+  p.(n-1).(0).(0)
+
+let%test_module _ =
+  (module struct
+    let cnf =
+      let cfg =
+        (* Example taken from Wikipedia *)
+        let s =   fresh_nonterminal ~hint:"S"   () in
+        let np =  fresh_nonterminal ~hint:"NP"  () in
+        let vp =  fresh_nonterminal ~hint:"VP"  () in
+        let pp =  fresh_nonterminal ~hint:"PP"  () in
+        let v =   fresh_nonterminal ~hint:"V"   () in
+        let p =   fresh_nonterminal ~hint:"P"   () in
+        let det = fresh_nonterminal ~hint:"Det" () in
+        let n =   fresh_nonterminal ~hint:"N"   () in
+        empty_cfg
+        |> add_entrypoint s
+        |> add_productionss [
+          (s,   [N np;  N vp]); (*   S ->  NP VP *)
+          (vp,  [N vp;  N pp]); (*  VP ->  V  NP *)
+          (vp,  [T "eats"]);    (*  VP -> eats   *)
+          (pp,  [N p;   N np]); (*  PP ->  P  NP *)
+          (np,  [N det; N n ]); (*  NP -> Det N  *)
+          (np,  [T "she"]);     (*  NP -> she    *)
+          (v,   [T "eats"]);    (*   V -> eats   *)
+          (p,   [T "with"]);    (*   P -> with   *)
+          (n,   [T "fish"]);    (*   N -> fish   *)
+          (n,   [T "fork"]);    (*   N -> fork   *)
+          (det, [T "a"]);       (* Det -> a      *)
+        ]
+      in
+      from_cfg cfg
+
+    let%test _ = cyk cnf [|"she"; "eats"; "a"; "fish"; "with"; "a"; "fork"|]
+  end)

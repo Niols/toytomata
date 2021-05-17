@@ -5,4 +5,5 @@
  (name CFG)
  (public_name toytomata.cfg)
  (libraries toytomata.ext toytomata.common)
- (preprocess (pps ppx_deriving.std)))
+ (preprocess (pps ppx_deriving.std ppx_inline_test))
+ (inline_tests))
