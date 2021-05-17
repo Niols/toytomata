@@ -53,7 +53,7 @@ let from_cfg cfg =
   (* Return *)
   { empty = !empty; t_prod; nt_prod; hints }
 
-let cyk g s =
+let accepts g s =
   (* input: grammar g containing [r] nonterminals [0] to [r-1] with start symbol [0]. *)
   (* input: an array s consisting of [n] "characters" [s0] to [sn-1]. *)
   let r = Array.length g.nt_prod in
@@ -64,30 +64,30 @@ let cyk g s =
   (* p[l,i,nt] will be set to [true] if the substring of length [l+1] starting
      from [i] can be generated from the nonterminal [nt]. *)
   let p =
-    Array.init n @@ fun l ->
-    Array.init (n-l) @@ fun _ ->
+    Array.init (1 + n) @@ fun _ ->
+    Array.init (1 + n) @@ fun _ ->
     Array.make r false
   in
 
-  for i = 0 to n-1 do
+  for i = 1 to n do
     Array.iteri
       (fun nt ts ->
          List.iter
            (fun t ->
-              if t = s.(i) then
-                p.(0).(i).(nt) <- true)
+              if t = s.(i-1) then
+                p.(1).(i).(nt) <- true)
            ts)
       g.t_prod
   done;
 
-  for l = 1 to n-1 do (* length of span *)
-    for i = 0 to n-l do (* start of span *)
-      for k = 0 to l-1 do (* partition of span *)
+  for l = 2 to n do (* length of span *)
+    for i = 1 to n-l+1 do (* start of span *)
+      for k = 1 to l-1 do (* partition of span *)
         Array.iteri
           (fun nt ntps ->
              List.iter
                (fun (b, c) ->
-                  if p.(k).(i).(b) && p.(l-k-1).(i+k+1).(c) then
+                  if p.(k).(i).(b) && p.(l-k).(i+k).(c) then
                     p.(l).(i).(nt) <- true)
                ntps)
           g.nt_prod
@@ -95,7 +95,7 @@ let cyk g s =
     done
   done;
 
-  p.(n-1).(0).(0)
+  p.(n).(1).(0)
 
 let%test_module _ =
   (module struct
@@ -114,7 +114,8 @@ let%test_module _ =
         |> add_entrypoint s
         |> add_productionss [
           (s,   [N np;  N vp]); (*   S ->  NP VP *)
-          (vp,  [N vp;  N pp]); (*  VP ->  V  NP *)
+          (vp,  [N vp;  N pp]); (*  VP ->  VP PP *)
+          (vp,  [N v;   N np]); (*  VP ->  V  NP *)
           (vp,  [T "eats"]);    (*  VP -> eats   *)
           (pp,  [N p;   N np]); (*  PP ->  P  NP *)
           (np,  [N det; N n ]); (*  NP -> Det N  *)
@@ -128,5 +129,5 @@ let%test_module _ =
       in
       from_cfg cfg
 
-    let%test _ = cyk cnf [|"she"; "eats"; "a"; "fish"; "with"; "a"; "fork"|]
+    let%test _ = accepts cnf [|"she"; "eats"; "a"; "fish"; "with"; "a"; "fork"|]
   end)
