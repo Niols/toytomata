@@ -53,7 +53,11 @@ let from_cfg cfg =
   (* Return *)
   { empty = !empty; t_prod; nt_prod; hints }
 
-let accepts g s =
+type parsetree =
+  | TProd of terminal
+  | NTProd of (int * parsetree) * (int * parsetree)
+
+let parse g s =
   (* input: grammar g containing [r] nonterminals [0] to [r-1] with start symbol [0]. *)
   (* input: an array s consisting of [n] "characters" [s0] to [sn-1]. *)
   let r = Array.length g.nt_prod in
@@ -66,7 +70,7 @@ let accepts g s =
   let p =
     Array.init n @@ fun l ->
     Array.init (n-l) @@ fun _ ->
-    Array.make r false
+    Array.make r None
   in
 
   for i = 0 to n-1 do
@@ -75,7 +79,7 @@ let accepts g s =
          List.iter
            (fun t ->
               if t = s.(i) then
-                p.(0).(i).(nt) <- true)
+                p.(0).(i).(nt) <- Some (TProd t))
            ts)
       g.t_prod
   done;
@@ -87,8 +91,10 @@ let accepts g s =
           (fun nt ntps ->
              List.iter
                (fun (b, c) ->
-                  if p.(k).(i).(b) && p.(l-k-1).(i+k+1).(c) then
-                    p.(l).(i).(nt) <- true)
+                  match p.(k).(i).(b), p.(l-k-1).(i+k+1).(c) with
+                  | Some ptb, Some ptc ->
+                    p.(l).(i).(nt) <- Some (NTProd ((b, ptb), (c, ptc)))
+                  | _ -> ())
                ntps)
           g.nt_prod
       done
@@ -96,6 +102,9 @@ let accepts g s =
   done;
 
   p.(n-1).(0).(0)
+
+let accepts g s =
+  parse g s <> None
 
 let%test_module _ =
   (module struct
