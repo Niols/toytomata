@@ -1,5 +1,6 @@
 module AST = AST
 module Transform = Transform
+module CNF = CNF
 
 (** {2 AST} *)
 
