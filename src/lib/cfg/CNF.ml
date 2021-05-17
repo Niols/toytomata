@@ -139,4 +139,5 @@ let%test_module _ =
       from_cfg cfg
 
     let%test _ = accepts cnf [|"she"; "eats"; "a"; "fish"; "with"; "a"; "fork"|]
+    let%test _ = not (accepts cnf [|"she"; "eats"; "fish"; "with"; "fork"|])
   end)
