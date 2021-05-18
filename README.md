@@ -13,6 +13,12 @@ when grading, for instance, to compare a solution with the problem statement.
 
 The API documentation is available [here](https://niols.github.io/toytomata/).
 
+Installation [![Build Status](https://github.com/colis-anr/morbig/actions/workflows/ci.yml/badge.svg?branch=main&event=push)](https://github.com/Niols/toytomata/actions)
+------------
+
+The only way to install this software is currently manually, by downloading the
+sources, installing the dependencies and building the project.
+
 See Also
 --------
 
