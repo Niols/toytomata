@@ -1,5 +1,17 @@
 open Ext
 
+let pp_word fmt w =
+  Format.pp_print_list
+    ~pp_sep:(fun _fmt () -> ())
+    Format.pp_print_string
+    fmt w
+
+let pp_alphabet fmt a =
+  Format.pp_print_list
+    ~pp_sep:(fun fmt () -> fpf fmt ", ")
+    Format.pp_print_string
+    fmt a
+
 let get_words lang_dir =
   let (complete, words) =
     Filename.concat lang_dir "words"
@@ -14,11 +26,7 @@ let get_alphabet words =
   let alphabet =
     List.sort_uniq compare (List.flatten words)
   in
-  epf "over alphabet %a@\n"
-    (Format.pp_print_list
-       ~pp_sep:(fun fmt () -> fpf fmt ", ")
-       Format.pp_print_string)
-    alphabet;
+  epf "over alphabet %a@\n" pp_alphabet alphabet;
   alphabet
 
 let get_filenames lang_dir prefix =
@@ -63,12 +71,6 @@ let all_words (alphabet: 'a list) : 'a list Seq.t =
   |> Seq.flatten
   |> Seq.map List.rev
 
-let pp_word fmt w =
-  Format.pp_print_list
-    ~pp_sep:(fun _fmt () -> ())
-    Format.pp_print_string
-    fmt w
-
 let rec compare_words_sequences sref complete name stest =
   match sref (), stest () with
   | Seq.Nil, Seq.Nil -> epf "done!@\n"
@@ -88,14 +90,43 @@ let rec compare_words_sequences sref complete name stest =
      | _ ->
        compare_words_sequences sref complete name stest)
 
-let check_pda words complete alphabet (name, pda) =
-  epf "@[<h 2>checking PDA `%s`... " name;
-  assert (PDA.alphabet pda = alphabet);
+module type Accepter = sig
+  type t
+
+  val name : string
+
+  val alphabet : t -> string list
+  val accepts : t -> string list -> bool
+end
+
+let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj : Accepter with type t = s) =
+  epf "@[<h 2>checking %s `%s`... " Obj.name name;
+  if List.sort compare (Obj.alphabet obj) <> alphabet then
+    epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one.@\n"
+      name pp_alphabet (Obj.alphabet obj);
   all_words alphabet
-  |> Seq.filter (fun word -> PDA.accepts pda word)
+  |> Seq.filter (fun word -> Obj.accepts obj word)
   |> compare_words_sequences
     (List.to_seq words) complete name;
   epf "@]"
+
+let check_cfg words complete alphabet (name, cfg) =
+  check_accepter words complete alphabet (name, cfg)
+    (module struct
+      type t = CFG.cfg
+      let name = "CFG"
+      let alphabet = CFG.alphabet
+      let accepts = CFG.accepts
+    end)
+
+let check_pda words complete alphabet (name, pda) =
+  check_accepter words complete alphabet (name, pda)
+    (module struct
+      type t = PDA.pda
+      let name = "PDA"
+      let alphabet = PDA.alphabet
+      let accepts = PDA.accepts
+    end)
 
 let check_language lang lang_dir =
   epf "@[<h 2>Language `%s`:@\n" lang;
@@ -103,7 +134,7 @@ let check_language lang lang_dir =
   let alphabet = get_alphabet words in
   let cfgs = get_cfgs lang_dir in
   let pdas = get_pdas lang_dir in
-  ignore cfgs;
+  List.iter (check_cfg words complete alphabet) cfgs;
   List.iter (check_pda words complete alphabet) pdas;
   epf "@]@."
 
