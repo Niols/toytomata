@@ -10,6 +10,17 @@ let get_words lang_dir =
     (List.length words);
   (complete, words)
 
+let get_alphabet words =
+  let alphabet =
+    List.sort_uniq compare (List.flatten words)
+  in
+  epf "  over alphabet %a@."
+    (Format.pp_print_list
+       ~pp_sep:(fun fmt () -> fpf fmt ", ")
+       Format.pp_print_string)
+    alphabet;
+  alphabet
+
 let get_filenames lang_dir prefix =
   Sys.readdir lang_dir
   |> Array.to_list
@@ -54,11 +65,13 @@ let all_words (alphabet: 'a list) : 'a list Seq.t =
 let check_language lang lang_dir =
   Format.eprintf "Language `%s`:@." lang;
   let (complete, words) = get_words lang_dir in
+  let alphabet = get_alphabet words in
   let cfgs = get_cfgs lang_dir in
   let pdas = get_pdas lang_dir in
 
   ignore complete;
   ignore words;
+  ignore alphabet;
   ignore cfgs;
   ignore pdas;
   assert false
