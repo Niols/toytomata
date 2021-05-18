@@ -1,5 +1,12 @@
 include Seq
 
+let rec append s1 s2 =
+  fun () ->
+  match s1 () with
+  | Nil -> s2 ()
+  | Cons (x1, s1) ->
+    Cons (x1, append s1 s2)
+
 let rec flatten ss =
   fun () ->
   match ss () with

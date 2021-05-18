@@ -1,5 +1,7 @@
 include module type of Seq
 
+val append : 'a t -> 'a t -> 'a t
+
 val flatten : 'a t t -> 'a t
 
 val iter2 : ('a -> 'b -> unit) -> 'a t -> 'b t -> unit
