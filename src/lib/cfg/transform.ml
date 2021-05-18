@@ -79,17 +79,30 @@ let inline_epsilon_productions cfg =
   in
   let nullable_nonterminals = nullable_nonterminals NonTerminal.Set.empty in
   let is_nullable n = NonTerminal.Set.mem n nullable_nonterminals in
-  cfg
-  |> update_productions
-    (fun n p ->
-       List.fold_left
-         (fun ps c ->
-           match c with
-           | N n when is_nullable n -> List.map (fun p -> N n :: p) ps @ ps
-           | _ -> List.map (fun p -> c :: p) ps)
-         [[]] p
-       |> List.filter ((<>) [])
-       |> List.map (fun p -> (n, List.rev p)))
+  (* For each rule eg. [A -> BCD] where [B] and [D] are nullable, replace by [A
+     -> BCD | BC | CD | C]. Remove all the rules of the form [A -> eps]. *)
+  let cfg =
+    cfg
+    |> update_productions
+      (fun n p ->
+         List.fold_left
+           (fun ps c ->
+              match c with
+              | N n when is_nullable n -> List.map (fun p -> N n :: p) ps @ ps
+              | _ -> List.map (fun p -> c :: p) ps)
+           [[]] p
+         |> List.filter ((<>) [])
+         |> List.map (fun p -> (n, List.rev p)))
+  in
+  (* We add again a rule of the form [S -> eps] for each nullable entrypoint. *)
+  List.fold_left
+    (fun cfg nt ->
+       if is_nullable nt then
+         add_production nt [] cfg
+       else
+         cfg)
+    cfg
+    (entrypoints cfg)
 
 let merge_unit_cycles cfg =
   (* Kosaraju's algorithm [Aho et al. 1983] for strongly connected components.
@@ -150,8 +163,57 @@ let merge_unit_cycles cfg =
     (productions cfg)
 
 let inline_unit_productions cfg =
-  let _cfg = merge_unit_cycles cfg in
-  assert false
+  (* make the graph induced by unit productions acyclic. it simplifies the
+     topological exploration for later *)
+  let cfg = merge_unit_cycles cfg in
+
+  (* split the CFG into a CFG with all the non-unit production rules and a list
+     of the unit production rules *)
+  let unit_prods = Hashtbl.create 8 in
+  let cfg =
+    Seq.fold_left
+      (fun cfg (nt, prod) ->
+         match prod with
+         | [N nt'] -> Hashtbl.add unit_prods nt nt'; cfg
+         | _ -> add_production nt prod cfg)
+      (add_entrypoints (entrypoints cfg) empty_cfg)
+      (productions cfg)
+  in
+
+  (* sort the non-terminals in reverse topological order with respect to the
+     graph induced by the unit production rules. store this as a list of pairs
+     containing the non-terminals and all the non-terminals they lead to via
+     unit production rule: (nonterminal * nonterminal list) list *)
+
+  let (_, topo_sort) =
+    let rec visit (visited, result) nt =
+      if NonTerminal.Set.mem nt visited then
+        (visited, result)
+      else
+        let nts = Hashtbl.find_all unit_prods nt in
+        let visited = NonTerminal.Set.add nt visited in
+        let (visited, result) = List.fold_left visit (visited, result) nts in
+        (visited, (nt, nts) :: result)
+    in
+    Hashtbl.to_seq_keys unit_prods
+    |> Seq.fold_left visit (NonTerminal.Set.empty, [])
+  in
+  let topo_sort = List.rev topo_sort in
+
+  (* iterate on the non-terminals in reverse topological order. for each unit
+     production [A -> B], take all the rules [B -> ...] and add the rules [A ->
+     ...] to the CFG. *)
+  List.fold_left
+    (fun cfg (nt, nts) ->
+       List.fold_left
+         (fun cfg nt' ->
+            (* focus: unit production [nt -> nt'] *)
+            add_productions nt (List.map snd (productions_list ~from_:nt' cfg)) cfg
+         )
+         cfg
+         nts)
+    cfg
+    topo_sort
 
 let remove_unreachable cfg =
   let rec compute_reachable reachable n =
