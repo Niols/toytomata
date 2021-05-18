@@ -52,6 +52,7 @@ symbol_or_empty:
 ;;
 
 transition:
+| a=letter_or_empty    { (a, CSTHelpers.map_located (fun _ -> None) a, CSTHelpers.map_located (fun _ -> None) a) }
 | a=letter_or_empty COMMA s=symbol_or_empty SLASH sp=symbol_or_empty
                        { (a, s, sp) }
 ;;

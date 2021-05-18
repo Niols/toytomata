@@ -8,16 +8,17 @@ type t = AST.pda
 
 (** {2 CST Parsing & Printing} *)
 
-let cst_from_lexbuf = Parser.entrypoint Lexer.read
+module ParsingFunctions = Common.ParsingFunctions.Make
+    (struct
+      include Parser
+      type output = CST.pda CST.located
+      let lexer_entrypoint = Lexer.read
+      let entrypoint = Parser.Incremental.entrypoint
+    end)
 
-let cst_from_channel ichan = cst_from_lexbuf (Lexing.from_channel ichan)
-let cst_from_string str = cst_from_lexbuf (Lexing.from_string str)
-
-let cst_from_file fname =
-  let ichan = open_in fname in
-  let pda = cst_from_channel ichan in
-  close_in ichan;
-  pda
+let cst_from_string = ParsingFunctions.from_string
+let cst_from_channel = ParsingFunctions.from_channel
+let cst_from_file = ParsingFunctions.from_file
 
 let pp_cst = Printer.pp_pda'
 

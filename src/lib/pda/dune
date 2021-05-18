@@ -1,5 +1,5 @@
 (ocamllex lexer)
-(menhir (modules parser))
+(menhir (modules parser) (flags --table))
 
 (library
  (name PDA)
