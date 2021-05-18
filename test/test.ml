@@ -59,7 +59,7 @@ let all_words (alphabet: 'a list) : 'a list Seq.t =
   let rec all_words words =
     Seq.Cons (words, fun () -> all_words (next_words words))
   in
-  (fun () -> all_words (Seq.cons [] Seq.empty))
+  (fun () -> all_words (fun () -> Cons ([], Seq.empty)))
   |> Seq.flatten
   |> Seq.map List.rev
 
