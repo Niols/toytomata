@@ -1,3 +1,4 @@
+open Ext
 
 let get_words lang_dir =
   let (complete, words) =
@@ -34,12 +35,6 @@ let get_pdas lang_dir =
   Format.eprintf "  has %d PDAs@." (List.length pdas);
   pdas
 
-let rec seq_flatten (ss: 'a Seq.t Seq.t) : 'a Seq.t =
-  fun () ->
-  match ss () with
-  | Nil -> Nil
-  | Cons (s, ss) -> Seq.append s (seq_flatten ss) ()
-
 let all_words (alphabet: 'a list) : 'a list Seq.t =
   let alphabet = List.to_seq alphabet in
   let next_words (words: 'a list Seq.t) : 'a list Seq.t =
@@ -54,7 +49,7 @@ let all_words (alphabet: 'a list) : 'a list Seq.t =
     Seq.Cons (words, fun () -> all_words (next_words words))
   in
   (fun () -> all_words (Seq.cons [] Seq.empty))
-  |> seq_flatten
+  |> Seq.flatten
 
 let check_language lang lang_dir =
   Format.eprintf "Language `%s`:@." lang;

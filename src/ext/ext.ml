@@ -1,4 +1,5 @@
 module List = ExtList
+module Seq = ExtSeq
 module Stack = ExtStack
 
 type 'a stack = 'a Stack.t
