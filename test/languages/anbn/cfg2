@@ -1,0 +1,4 @@
+entrypoint S
+S -> epsilon | T
+T -> aaaSbbb | V
+V -> aTb
