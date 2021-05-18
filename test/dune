@@ -1,3 +1,4 @@
 (test
  (name test)
+ (libraries toytomata)
  (deps (source_tree languages)))
