@@ -54,3 +54,9 @@ let accepts cfg =
   let cfg = Transform.cnf cfg in
   let cnf = CNF.from_cfg cfg in
   fun word -> CNF.accepts cnf (Array.of_list word)
+(** Test of acceptance of a word by a CFG. Note that this function works in two
+   steps: given the CFG, it computes its CNF, stores it efficiently and then
+   returns a function which, given a word, checks whether it is accepted. This
+   means that for repetitive uses of the same function, it is much more
+   efficient to store the result of [accepts cfg] and then call this function
+   rather than call [accepts cfg word] again on every word. *)
