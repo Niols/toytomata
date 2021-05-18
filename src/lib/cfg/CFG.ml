@@ -46,3 +46,10 @@ let pp fmt g = g |> ast_to_cst |> pp_cst fmt
 let to_channel ochan g = g |> ast_to_cst |> cst_to_channel ochan
 let to_string g = g |> ast_to_cst |> cst_to_string
 let to_file fname g = g |> ast_to_cst |> cst_to_file fname
+
+(** {2 Words Acceptance} *)
+
+let accepts cfg =
+  let cfg = Transform.cnf cfg in
+  let cnf = CNF.from_cfg cfg in
+  fun word -> CNF.accepts cnf (Array.of_list word)
