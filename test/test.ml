@@ -71,6 +71,11 @@ let all_words (alphabet: 'a list) : 'a list Seq.t =
   |> Seq.flatten
   |> Seq.map List.rev
 
+let compare_words w1 w2 =
+  let c = compare (List.length w1) (List.length w2) in
+  if c <> 0 then c
+  else compare w1 w2
+
 let rec compare_words_sequences sref complete name stest =
   match sref (), stest () with
   | Seq.Nil, Seq.Nil -> epf "done!@\n"
@@ -80,7 +85,7 @@ let rec compare_words_sequences sref complete name stest =
       name pp_word w
   | _, Nil -> assert false (* should never happen because we try all words *)
   | Cons (wref, sref), Cons (wtest, stest) ->
-    (match compare wref wtest with
+    (match compare_words wref wtest with
      | n when n < 0 ->
        epf "fail!@\n%s does not recognise %a but it is in the list!@\n"
          name pp_word wref
