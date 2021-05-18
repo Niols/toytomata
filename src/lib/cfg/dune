@@ -1,8 +1,8 @@
 (ocamllex lexer)
-(menhir (modules parser))
+(menhir (modules parser) (flags --table))
 
 (library
  (name CFG)
  (public_name toytomata.cfg)
- (libraries toytomata.ext toytomata.common)
+ (libraries toytomata.ext toytomata.common menhirLib)
  (preprocess (pps ppx_deriving.std)))
