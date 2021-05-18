@@ -40,6 +40,7 @@ let terminals_from_production =
 
 let terminals cfg =
   List.concat_map (fun (_, p) -> terminals_from_production p) (productions_list cfg)
+  |> List.sort_uniq compare
 
 let alphabet = terminals
 
