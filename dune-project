@@ -14,4 +14,5 @@
  (synopsis "An executable and library to help with automata courses")
  (depends
   ppx_deriving
+  (ppx_inline_test (or :build :with-test))
   (menhir :build)))
