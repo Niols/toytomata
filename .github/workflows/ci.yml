@@ -16,9 +16,9 @@ jobs:
           - 4.09.1
           - 4.10.2
           - 4.11.2
-          - 4.12.0
         include:
-          - { os: macos-latest, ocaml-version: 4.12.0 }
+          - { os: ubuntu-latest,  ocaml-version: 4.12.0, deploy-doc: deploy-doc }
+          - { os: macos-latest,   ocaml-version: 4.12.0 }
           - { os: windows-latest, ocaml-version: 4.12.0 }
 
     runs-on: ${{ matrix.os }}
@@ -61,10 +61,10 @@ jobs:
 
       - name: Generate Documentation for Auto-Deployment
         run: opam exec -- make doc
-        if: runner.os == 'Linux' && matrix.ocaml-version == '4.10.2' && github.event_name == 'push'
+        if: github.event_name == 'push' && matrix.deploy-doc == 'deploy-doc'
 
       - name: Auto-Deploy Documentation
         uses: Niols/deploy-odoc-action@main
         with:
           GENERATED_DOC_DIR: doc/
-        if: runner.os == 'Linux' && matrix.ocaml-version == '4.10.2' && github.event_name == 'push'
+        if: github.event_name == 'push' && matrix.deploy-doc == 'deploy-doc'

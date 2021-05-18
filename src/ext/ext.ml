@@ -1,9 +1,11 @@
 module List = ExtList
+module Seq = ExtSeq
 module Stack = ExtStack
 
 type 'a stack = 'a Stack.t
 
 let pf = Format.printf
+let epf = Format.eprintf
 let spf = Format.sprintf
 let fpf = Format.fprintf
 

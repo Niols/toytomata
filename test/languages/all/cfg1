@@ -1,2 +1,2 @@
-entrypoint S;
-S -> epsilon | aS | bS;
+entrypoint S
+S -> epsilon | aS | bS

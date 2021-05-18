@@ -46,7 +46,11 @@ let from_cfg cfg =
       match p with
       | [] when nt = 0 -> empty := true
       | [T a] -> t_prod.(nt) <- a :: t_prod.(nt)
-      | [N b; N c] -> nt_prod.(nt) <- (convert b, convert c) :: nt_prod.(nt)
+      | [N b; N c] ->
+        let b = convert b and c = convert c in
+        if b = 0 || c = 0 then
+          failwith "CNF.from_cfg: no rule is allowed to produce the start symbol";
+        nt_prod.(nt) <- (b, c) :: nt_prod.(nt)
       | _ -> failwith "CNF.from_cfg: only rules of the form A -> BC, A -> a and S -> ε are allowed"
     );
 

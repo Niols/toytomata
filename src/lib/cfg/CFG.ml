@@ -9,16 +9,17 @@ type cfg = AST.cfg
 
 (** {2 CST Parsing & Printing} *)
 
-let cst_from_lexbuf = Parser.entrypoint Lexer.read
+module ParsingFunctions = Common.ParsingFunctions.Make
+    (struct
+      include Parser
+      type output = CST.cfg CST.located
+      let lexer_entrypoint = Lexer.read
+      let entrypoint = Parser.Incremental.entrypoint
+    end)
 
-let cst_from_channel ichan = cst_from_lexbuf (Lexing.from_channel ichan)
-let cst_from_string str = cst_from_lexbuf (Lexing.from_string str)
-
-let cst_from_file fname =
-  let ichan = open_in fname in
-  let grammar = cst_from_channel ichan in
-  close_in ichan;
-  grammar
+let cst_from_string = ParsingFunctions.from_string
+let cst_from_channel = ParsingFunctions.from_channel
+let cst_from_file = ParsingFunctions.from_file
 
 let pp_cst = Printer.pp_cfg'
 

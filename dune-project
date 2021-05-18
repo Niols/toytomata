@@ -15,4 +15,4 @@
  (depends
   ppx_deriving
   (ppx_inline_test (or :build :with-test))
-  (menhir :build)))
+  menhir))
