@@ -1,6 +1,8 @@
 open Ext
 open Common
 
+let length_limit = 10
+
 let get_words lang_dir =
   let (complete, words) =
     Filename.concat lang_dir "words"
@@ -48,19 +50,27 @@ let rec compare_words_sequences sref complete name stest =
   | Seq.Nil when complete = WordsParser.Incomplete ->
     (
       match stest () with
-      | Seq.Nil -> assert false (* cannot happen *)
-      | Cons (_, _) ->
-        epf "done!"
+      | Seq.Nil ->
+        epf "fail!@\nThe list is incomplete but %s does not recognise any more words" name
+      | Cons (_, _) -> epf "done!"
     )
   | Seq.Nil -> (* complete = WordsParser.Complete *)
     (
-      (* FIXME: in case of Complete, check for a while that there are no other words. *)
-      epf "done!"
+      match stest () with
+      | Seq.Nil ->
+        epf "done!"
+      | Cons (wtest, _) ->
+        epf "fail!@\nThe list is complete by %s recognises %a"
+          name Word.pp wtest;
     )
   | Cons (wref, sref) ->
     (
       match stest () with
-      | Seq.Nil -> assert false (* should never happen because we just try all words *)
+      | Seq.Nil ->
+        (
+          epf "fail!@\n%s does not recognise any more words (up to length %d) but the list is not done (it still contains at least %a)"
+          name length_limit Word.pp wref
+        )
       | Cons (wtest, stest) ->
         (match Word.compare wref wtest with
          | n when n < 0 ->
@@ -87,7 +97,7 @@ let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj 
   if List.sort compare (Obj.alphabet obj) <> alphabet then
     epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one."
       name (Word.pp_alphabet ", ") (Obj.alphabet obj);
-  Word.all_words alphabet
+  Word.not_all_words ~length_limit alphabet
   |> Seq.filter (fun word -> Obj.accepts obj word)
   (* note that this sequence never ends; in particular, if there are no more
      words recognised by the object, then the filter just hangs forever *)
