@@ -1,0 +1,6 @@
+entrypoint S
+S -> epsilon | L1 | L2 | L3 | L4
+L1 -> a | b
+L2 -> aL1 | bL1
+L3 -> aL2 | bL2
+L4 -> aL3 | bL3

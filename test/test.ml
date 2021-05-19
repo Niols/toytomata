@@ -77,23 +77,28 @@ let compare_words w1 w2 =
   else compare w1 w2
 
 let rec compare_words_sequences sref complete name stest =
-  match sref (), stest () with
-  | Seq.Nil, Seq.Nil -> epf "done!@\n"
-  | Nil, _ when complete = WordsParser.Incomplete -> epf "done!@\n"
-  | Nil, Cons (w, _) ->
-    epf "fail!@\n%s recognises %a but it is not in the list!@\n"
-      name pp_word w
-  | _, Nil -> assert false (* should never happen because we try all words *)
-  | Cons (wref, sref), Cons (wtest, stest) ->
-    (match compare_words wref wtest with
-     | n when n < 0 ->
-       epf "fail!@\n%s does not recognise %a but it is in the list!@\n"
-         name pp_word wref
-     | n when n > 0 ->
-       epf "fail!@\n%s recognises %a but it is not in the list!@\n"
-         name pp_word wtest
-     | _ ->
-       compare_words_sequences sref complete name stest)
+  match sref () with
+  | Seq.Nil ->
+    (
+      (* FIXME: in case of Incomplete, check that there is at least a next word. *)
+      (* FIXME: in case of Complete, check for a while that there are no other words. *)
+      epf "done!"
+    )
+  | Cons (wref, sref) ->
+    (
+      match stest () with
+      | Seq.Nil -> assert false (* should never happen because we just try all words *)
+      | Cons (wtest, stest) ->
+        (match compare_words wref wtest with
+         | n when n < 0 ->
+           epf "fail!@\n%s does not recognise %a but it is in the list!"
+             name pp_word wref
+         | n when n > 0 ->
+           epf "fail!@\n%s recognises %a but it is not in the list!"
+             name pp_word wtest
+         | _ ->
+           compare_words_sequences sref complete name stest)
+    )
 
 module type Accepter = sig
   type t
@@ -107,13 +112,15 @@ end
 let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj : Accepter with type t = s) =
   epf "@[<h 2>checking %s `%s`... " Obj.key name;
   if List.sort compare (Obj.alphabet obj) <> alphabet then
-    epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one.@\n"
+    epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one."
       name pp_alphabet (Obj.alphabet obj);
   all_words alphabet
   |> Seq.filter (fun word -> Obj.accepts obj word)
+  (* note that this sequence never ends; in particular, if there are no more
+     words recognised by the object, then the filter just hangs forever *)
   |> compare_words_sequences
     (List.to_seq words) complete name;
-  epf "@]"
+  epf "@]@\n"
 
 let check_cfg words complete alphabet (name, cfg) =
   check_accepter words complete alphabet (name, cfg) (module CFG)
