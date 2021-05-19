@@ -78,9 +78,15 @@ let compare_words w1 w2 =
 
 let rec compare_words_sequences sref complete name stest =
   match sref () with
-  | Seq.Nil ->
+  | Seq.Nil when complete = WordsParser.Incomplete ->
     (
-      (* FIXME: in case of Incomplete, check that there is at least a next word. *)
+      match stest () with
+      | Seq.Nil -> assert false (* cannot happen *)
+      | Cons (_, _) ->
+        epf "done!"
+    )
+  | Seq.Nil -> (* complete = WordsParser.Complete *)
+    (
       (* FIXME: in case of Complete, check for a while that there are no other words. *)
       epf "done!"
     )
