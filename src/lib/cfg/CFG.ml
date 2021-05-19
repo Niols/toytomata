@@ -2,10 +2,12 @@ module AST = AST
 module Transform = Transform
 module CNF = CNF
 
+let key = "CFG"
+
 (** {2 AST} *)
 
 include AST
-type cfg = AST.cfg
+type t = AST.cfg
 
 (** {2 CST Parsing & Printing} *)
 

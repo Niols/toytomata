@@ -98,14 +98,14 @@ let rec compare_words_sequences sref complete name stest =
 module type Accepter = sig
   type t
 
-  val name : string
+  val key : string
 
   val alphabet : t -> string list
   val accepts : t -> string list -> bool
 end
 
 let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj : Accepter with type t = s) =
-  epf "@[<h 2>checking %s `%s`... " Obj.name name;
+  epf "@[<h 2>checking %s `%s`... " Obj.key name;
   if List.sort compare (Obj.alphabet obj) <> alphabet then
     epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one.@\n"
       name pp_alphabet (Obj.alphabet obj);
@@ -116,22 +116,10 @@ let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj 
   epf "@]"
 
 let check_cfg words complete alphabet (name, cfg) =
-  check_accepter words complete alphabet (name, cfg)
-    (module struct
-      type t = CFG.cfg
-      let name = "CFG"
-      let alphabet = CFG.alphabet
-      let accepts = CFG.accepts
-    end)
+  check_accepter words complete alphabet (name, cfg) (module CFG)
 
 let check_pda words complete alphabet (name, pda) =
-  check_accepter words complete alphabet (name, pda)
-    (module struct
-      type t = PDA.pda
-      let name = "PDA"
-      let alphabet = PDA.alphabet
-      let accepts = PDA.accepts
-    end)
+  check_accepter words complete alphabet (name, pda) (module PDA)
 
 let check_language lang lang_dir =
   epf "@[<h 2>Language `%s`:@\n" lang;
