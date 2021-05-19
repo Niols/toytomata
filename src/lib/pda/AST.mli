@@ -3,7 +3,7 @@
 module State : Common.Element.S
 
 type state = State.t
-type letter = string
+type letter = Common.Word.letter
 type symbol = string
 
 type pda

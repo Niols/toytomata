@@ -1,5 +1,5 @@
 (library
  (name common)
  (public_name toytomata.common)
- (libraries menhirLib)
+ (libraries menhirLib toytomata.ext)
  (preprocess (pps ppx_deriving.std)))

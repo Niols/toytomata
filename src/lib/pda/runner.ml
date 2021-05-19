@@ -1,7 +1,6 @@
 open Ext
 open AST
 
-type word = letter list
 type stack = symbol Stack.t
 
 type configuration = pda * (state * stack) list

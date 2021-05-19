@@ -4,7 +4,7 @@ open Common
 module State = Element.Make(struct end)
 type state = State.t
 
-type letter = string
+type letter = Word.letter
 type symbol = string
 
 module LetterOptionMap = Map.Make(struct

@@ -1,16 +1,5 @@
 open Ext
-
-let pp_word fmt w =
-  Format.pp_print_list
-    ~pp_sep:(fun _fmt () -> ())
-    Format.pp_print_string
-    fmt w
-
-let pp_alphabet fmt a =
-  Format.pp_print_list
-    ~pp_sep:(fun fmt () -> fpf fmt ", ")
-    Format.pp_print_string
-    fmt a
+open Common
 
 let get_words lang_dir =
   let (complete, words) =
@@ -26,7 +15,7 @@ let get_alphabet words =
   let alphabet =
     List.sort_uniq compare (List.flatten words)
   in
-  epf "over alphabet %a@\n" pp_alphabet alphabet;
+  epf "over alphabet %a@\n" (Word.pp_alphabet ", ") alphabet;
   alphabet
 
 let get_filenames lang_dir prefix =
@@ -54,28 +43,6 @@ let get_pdas lang_dir =
   Format.eprintf "has %d PDAs@\n" (List.length pdas);
   pdas
 
-let all_words (alphabet: 'a list) : 'a list Seq.t =
-  let alphabet = List.to_seq alphabet in
-  let next_words (words: 'a list Seq.t) : 'a list Seq.t =
-    Seq.flat_map
-      (fun word ->
-         Seq.map
-           (fun letter -> letter :: word)
-           alphabet)
-      words
-  in
-  let rec all_words words =
-    Seq.Cons (words, fun () -> all_words (next_words words))
-  in
-  (fun () -> all_words (fun () -> Cons ([], Seq.empty)))
-  |> Seq.flatten
-  |> Seq.map List.rev
-
-let compare_words w1 w2 =
-  let c = compare (List.length w1) (List.length w2) in
-  if c <> 0 then c
-  else compare w1 w2
-
 let rec compare_words_sequences sref complete name stest =
   match sref () with
   | Seq.Nil when complete = WordsParser.Incomplete ->
@@ -95,13 +62,13 @@ let rec compare_words_sequences sref complete name stest =
       match stest () with
       | Seq.Nil -> assert false (* should never happen because we just try all words *)
       | Cons (wtest, stest) ->
-        (match compare_words wref wtest with
+        (match Word.compare wref wtest with
          | n when n < 0 ->
            epf "fail!@\n%s does not recognise %a but it is in the list!"
-             name pp_word wref
+             name Word.pp wref
          | n when n > 0 ->
            epf "fail!@\n%s recognises %a but it is not in the list!"
-             name pp_word wtest
+             name Word.pp wtest
          | _ ->
            compare_words_sequences sref complete name stest)
     )
@@ -119,8 +86,8 @@ let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj 
   epf "@[<h 2>checking %s `%s`... " Obj.key name;
   if List.sort compare (Obj.alphabet obj) <> alphabet then
     epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one."
-      name pp_alphabet (Obj.alphabet obj);
-  all_words alphabet
+      name (Word.pp_alphabet ", ") (Obj.alphabet obj);
+  Word.all_words alphabet
   |> Seq.filter (fun word -> Obj.accepts obj word)
   (* note that this sequence never ends; in particular, if there are no more
      words recognised by the object, then the filter just hangs forever *)
