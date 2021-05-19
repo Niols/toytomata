@@ -1,10 +1,24 @@
 open Ext
 open Common
 
-let length_limit = 13
+let length_limit = 12
+
+let pp_done fmt () =
+  fpf fmt "\027[1;32mdone!\027[m"
+
+let pp_fail fmt () =
+  fpf fmt "\027[1;31mfail!\027[m"
+
+let pp_hl pp fmt a =
+  fpf fmt "\027[1;33m%a\027[m" pp a
+
+let pp_hl_str fmt s =
+  pp_hl Format.pp_print_string fmt s
 
 let failure = ref false
-let fail () = failure := true
+let fail () =
+  epf "%a" pp_fail ();
+  failure := true
 
 let get_words lang_dir =
   let (complete, words) =
@@ -55,18 +69,19 @@ let rec compare_words_sequences sref complete name stest =
       match stest () with
       | Seq.Nil ->
         fail ();
-        epf "fail!@\nThe list is incomplete but %s does not recognise any more words" name
-      | Cons (_, _) -> epf "done!"
+        epf "@\nThe list is incomplete but %a does not recognise any more words"
+          pp_hl_str name
+      | Cons (_, _) -> epf "%a" pp_done ()
     )
   | Seq.Nil -> (* complete = WordsParser.Complete *)
     (
       match stest () with
       | Seq.Nil ->
-        epf "done!"
+        epf "%a" pp_done ()
       | Cons (wtest, _) ->
         fail ();
-        epf "fail!@\nThe list is complete but %s recognises %a"
-          name Word.pp wtest;
+        epf "@\nThe list is complete but %a recognises %a"
+          pp_hl_str name Word.pp wtest;
     )
   | Cons (wref, sref) ->
     (
@@ -74,19 +89,19 @@ let rec compare_words_sequences sref complete name stest =
       | Seq.Nil ->
         (
           fail ();
-          epf "fail!@\n%s does not recognise any more words (up to length %d) but the list is not done (it still contains at least %a)"
-            name length_limit Word.pp wref
+          epf "@\n%a does not recognise any more words (up to length %d)@\nbut the list is not done (it still contains at least %a)"
+            pp_hl_str name length_limit Word.pp wref
         )
       | Cons (wtest, stest) ->
         (match Word.compare wref wtest with
          | n when n < 0 ->
            fail ();
-           epf "fail!@\n%s does not recognise %a but it is in the list!"
-             name Word.pp wref
+           epf "@\n%a does not recognise %a but it is in the list!"
+             pp_hl_str name Word.pp wref
          | n when n > 0 ->
            fail ();
-           epf "fail!@\n%s recognises %a but it is not in the list!"
-             name Word.pp wtest
+           epf "@\n%a recognises %a but it is not in the list!"
+             pp_hl_str name Word.pp wtest
          | _ ->
            compare_words_sequences sref complete name stest)
     )
@@ -101,15 +116,15 @@ module type Accepter = sig
 end
 
 let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj : Accepter with type t = s) =
-  epf "@[<h 2>checking %s `%s`... " Obj.key name;
+  epf "@[<h 2>checking %s `%a`... " Obj.key pp_hl_str name;
   if List.sort compare (Obj.alphabet obj) <> alphabet then
     (
       fail ();
-      epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one."
-        name (Word.pp_alphabet ", ") (Obj.alphabet obj)
+      epf "@\nthe alphabet of %a (%a) does not correspond to the expected one."
+        pp_hl_str name (Word.pp_alphabet ", ") (Obj.alphabet obj)
     );
   Word.not_all_words ~length_limit alphabet
-  |> Seq.filter (fun word -> Obj.accepts obj word)
+  |> Seq.filter (Obj.accepts obj) (* much faster than (fun word -> Obj.accepts obj word) *)
   (* note that this sequence never ends; in particular, if there are no more
      words recognised by the object, then the filter just hangs forever *)
   |> compare_words_sequences
@@ -123,7 +138,7 @@ let check_pda words complete alphabet (name, pda) =
   check_accepter words complete alphabet (name, pda) (module PDA)
 
 let check_language lang lang_dir =
-  epf "@[<h 2>Language `%s`:@\n" lang;
+  epf "@[<h 2>Language `%a`:@\n" pp_hl_str lang;
   let (complete, words) = get_words lang_dir in
   let alphabet = get_alphabet words in
   let cfgs = get_cfgs lang_dir in
