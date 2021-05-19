@@ -3,6 +3,9 @@ open Common
 
 let length_limit = 10
 
+let failure = ref false
+let fail () = failure := true
+
 let get_words lang_dir =
   let (complete, words) =
     Filename.concat lang_dir "words"
@@ -51,6 +54,7 @@ let rec compare_words_sequences sref complete name stest =
     (
       match stest () with
       | Seq.Nil ->
+        fail ();
         epf "fail!@\nThe list is incomplete but %s does not recognise any more words" name
       | Cons (_, _) -> epf "done!"
     )
@@ -60,7 +64,8 @@ let rec compare_words_sequences sref complete name stest =
       | Seq.Nil ->
         epf "done!"
       | Cons (wtest, _) ->
-        epf "fail!@\nThe list is complete by %s recognises %a"
+        fail ();
+        epf "fail!@\nThe list is complete but %s recognises %a"
           name Word.pp wtest;
     )
   | Cons (wref, sref) ->
@@ -68,15 +73,18 @@ let rec compare_words_sequences sref complete name stest =
       match stest () with
       | Seq.Nil ->
         (
+          fail ();
           epf "fail!@\n%s does not recognise any more words (up to length %d) but the list is not done (it still contains at least %a)"
-          name length_limit Word.pp wref
+            name length_limit Word.pp wref
         )
       | Cons (wtest, stest) ->
         (match Word.compare wref wtest with
          | n when n < 0 ->
+           fail ();
            epf "fail!@\n%s does not recognise %a but it is in the list!"
              name Word.pp wref
          | n when n > 0 ->
+           fail ();
            epf "fail!@\n%s recognises %a but it is not in the list!"
              name Word.pp wtest
          | _ ->
@@ -95,8 +103,11 @@ end
 let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj : Accepter with type t = s) =
   epf "@[<h 2>checking %s `%s`... " Obj.key name;
   if List.sort compare (Obj.alphabet obj) <> alphabet then
-    epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one."
-      name (Word.pp_alphabet ", ") (Obj.alphabet obj);
+    (
+      fail ();
+      epf "fail@\nthe alphabet of %s (%a) does not correspond to the expected one."
+        name (Word.pp_alphabet ", ") (Obj.alphabet obj)
+    );
   Word.not_all_words ~length_limit alphabet
   |> Seq.filter (fun word -> Obj.accepts obj word)
   (* note that this sequence never ends; in particular, if there are no more
@@ -128,3 +139,5 @@ let () =
        let lang_dir = Filename.concat langs_dir lang in
        check_language lang lang_dir)
     (Sys.readdir langs_dir)
+
+let () = exit (if !failure then 1 else 0)
