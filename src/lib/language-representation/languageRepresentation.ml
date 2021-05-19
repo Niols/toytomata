@@ -32,9 +32,6 @@ let to_file fname = function
   | CFG cfg -> CFG.to_file fname cfg
   | PDA pda -> PDA.to_file fname pda
 
-let accepts repr _word =
-  match repr with
-  | CFG _cfg -> assert false
-  | PDA pda ->
-    let _cfg = Convert.PDA_to_CFG.pda_to_cfg pda in
-    assert false
+let accepts = function
+  | CFG cfg -> CFG.accepts cfg
+  | PDA pda -> PDA.accepts pda

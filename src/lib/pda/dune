@@ -4,5 +4,5 @@
 (library
  (name PDA)
  (public_name toytomata.pda)
- (libraries toytomata.ext toytomata.common)
+ (libraries toytomata.ext toytomata.common toytomata.cfg)
  (preprocess (pps ppx_deriving.std)))

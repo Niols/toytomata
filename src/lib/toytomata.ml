@@ -34,12 +34,11 @@ let pda_to_file = PDA.to_file
 
 (** {2 Conversions} *)
 
-let cfg_to_pda = Convert.CFG_to_PDA.cfg_to_pda
-let pda_to_cfg = Convert.PDA_to_CFG.pda_to_cfg
+let cfg_to_pda = PDA.from_cfg
+let pda_to_cfg = PDA.to_cfg
 
 (** {2 Module Aliases} *)
 
 module Common = Common
-module Convert = Convert
 module CFG = CFG
 module PDA = PDA

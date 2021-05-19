@@ -1,8 +1,0 @@
-(library
- (name convert)
- (public_name toytomata.convert)
- (libraries
-  toytomata.cfg
-  toytomata.pda
-  toytomata.common)
- (preprocess (pps ppx_deriving.std)))

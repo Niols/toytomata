@@ -5,6 +5,5 @@
   toytomata.ext
   toytomata.common
   toytomata.cfg
-  toytomata.pda
-  toytomata.convert)
+  toytomata.pda)
  (preprocess (pps ppx_deriving.std)))

@@ -55,4 +55,7 @@ let to_file fname g = g |> ast_to_cst |> cst_to_file fname
 
 (** {2 Rest} *)
 
+let to_cfg = PDA_to_CFG.pda_to_cfg
+let from_cfg = CFG_to_PDA.cfg_to_pda
+
 let accepts = Runner.accepts

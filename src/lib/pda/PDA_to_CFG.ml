@@ -4,16 +4,16 @@ let split_pop_push pda =
   List.fold_left
     (fun pda' (q, q', (a, s, s')) ->
        if s = None || s' = None then
-         PDA.add_transition q q' (a, s, s') pda'
+         AST.add_transition q q' (a, s, s') pda'
        else
-         let qtmp = PDA.fresh_state () in
-         let pda' = PDA.add_transition q qtmp (a, s, None) pda' in
-         let pda' = PDA.add_transition qtmp q' (None, None, s') pda' in
+         let qtmp = AST.fresh_state () in
+         let pda' = AST.add_transition q qtmp (a, s, None) pda' in
+         let pda' = AST.add_transition qtmp q' (None, None, s') pda' in
          pda')
-    PDA.empty_pda
-    (PDA.transitions_list pda)
-  |> PDA.add_initials (PDA.initial_states pda)
-  |> PDA.add_finals (PDA.final_states pda)
+    AST.empty_pda
+    (AST.transitions_list pda)
+  |> AST.add_initials (AST.initial_states pda)
+  |> AST.add_finals (AST.final_states pda)
 
 let pda_to_cfg pda =
   let nonterminal_of_states_pair =
@@ -67,16 +67,16 @@ let pda_to_cfg pda =
                                   cfg
                              )
                              cfg
-                             (PDA.transitions_list ~that_pop:(Some s') pda)
+                             (AST.transitions_list ~that_pop:(Some s') pda)
                          )
                        | Some _, Some _ -> assert false)
                     cfg
-                    (PDA.transitions_list ~from_:p pda)
+                    (AST.transitions_list ~from_:p pda)
                 ))
            cfg
-           (PDA.states pda))
+           (AST.states pda))
       cfg
-      (PDA.states pda)
+      (AST.states pda)
   in
   let cfg =
     List.fold_left
@@ -86,8 +86,8 @@ let pda_to_cfg pda =
               let v_qq' = nonterminal_of_states_pair q q' in
               CFG.add_entrypoint v_qq' cfg)
            cfg
-           (PDA.final_states pda))
+           (AST.final_states pda))
       cfg
-      (PDA.initial_states pda)
+      (AST.initial_states pda)
   in
   cfg
