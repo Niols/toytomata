@@ -73,13 +73,13 @@ let pdas =
       match input.source with
       | FromFile fname ->
         pf "Reading from file \"%s\".@." fname;
-        PDA.from_file fname
+        PDA.from_file_exn fname
       | FromString str ->
         pf "Reading from string \"%s\".@." str;
-        PDA.from_string str
+        PDA.from_string_exn str
       | FromStdin ->
         pf "Please enter a PDA (end it with Ctrl+D):@.";
-        PDA.from_channel stdin
+        PDA.from_channel_exn stdin
     )
   | CFG ->
     (
@@ -88,13 +88,13 @@ let pdas =
         match input.source with
         | FromFile fname ->
           pf "Reading from file \"%s\".@." fname;
-          CFG.from_file fname
+          CFG.from_file_exn fname
         | FromString str ->
           pf "Reading from string \"%s\".@." str;
-          CFG.from_string str
+          CFG.from_string_exn str
         | FromStdin ->
           pf "Please enter a CFG (end it with Ctrl+D):@.";
-          CFG.from_channel stdin
+          CFG.from_channel_exn stdin
       in
       let pda = cfg_to_pda cfg in
       pf "I have converted it to the following PDA:@\n%a@?" PDA.pp pda;

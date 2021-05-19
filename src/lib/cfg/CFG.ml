@@ -21,6 +21,10 @@ let cst_from_string = ParsingFunctions.from_string
 let cst_from_channel = ParsingFunctions.from_channel
 let cst_from_file = ParsingFunctions.from_file
 
+let cst_from_string_exn = ParsingFunctions.from_string_exn
+let cst_from_channel_exn = ParsingFunctions.from_channel_exn
+let cst_from_file_exn = ParsingFunctions.from_file_exn
+
 let pp_cst = Printer.pp_cfg'
 
 let cst_to_string = Format.asprintf "%a" pp_cst
@@ -39,9 +43,9 @@ let ast_to_cst = AST_to_CST.cfg__to__cfg'
 
 (** {2 AST Parsing & Printing} *)
 
-let from_channel ichan = cst_from_channel ichan |> cst_to_ast
-let from_string str = cst_from_string str |> cst_to_ast
-let from_file fname = cst_from_file fname |> cst_to_ast
+let from_channel_exn ichan = cst_from_channel_exn ichan |> cst_to_ast
+let from_string_exn str = cst_from_string_exn str |> cst_to_ast
+let from_file_exn fname = cst_from_file_exn fname |> cst_to_ast
 
 let pp fmt g = g |> ast_to_cst |> pp_cst fmt
 let to_channel ochan g = g |> ast_to_cst |> cst_to_channel ochan

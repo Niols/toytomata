@@ -41,7 +41,7 @@ let get_filenames lang_dir prefix =
 let get_cfgs lang_dir =
   let cfgs =
     get_filenames lang_dir "cfg"
-    |> List.map (fun cfg -> (cfg, CFG.from_file cfg))
+    |> List.map (fun cfg -> (cfg, CFG.from_file_exn cfg))
   in
   Format.eprintf "has %d CFGs@\n" (List.length cfgs);
   cfgs
@@ -49,7 +49,7 @@ let get_cfgs lang_dir =
 let get_pdas lang_dir =
   let pdas =
     get_filenames lang_dir "pda"
-    |> List.map (fun pda -> (pda, PDA.from_file pda))
+    |> List.map (fun pda -> (pda, PDA.from_file_exn pda))
   in
   Format.eprintf "has %d PDAs@\n" (List.length pdas);
   pdas

@@ -9,16 +9,16 @@ let from_cfg cfg = CFG cfg
 let from_pda pda = PDA pda
 
 let from_channel ichan =
-  try CFG (CFG.from_channel ichan)
-  with _ -> PDA (PDA.from_channel ichan)
+  try CFG (CFG.from_channel_exn ichan)
+  with _ -> PDA (PDA.from_channel_exn ichan)
 
 let from_string str =
-  try CFG (CFG.from_string str)
-  with _ -> PDA (PDA.from_string str)
+  try CFG (CFG.from_string_exn str)
+  with _ -> PDA (PDA.from_string_exn str)
 
 let from_file fname =
-  try CFG (CFG.from_file fname)
-  with _ -> PDA (PDA.from_file fname)
+  try CFG (CFG.from_file_exn fname)
+  with _ -> PDA (PDA.from_file_exn fname)
 
 let to_channel ochan = function
   | CFG cfg -> CFG.to_channel ochan cfg

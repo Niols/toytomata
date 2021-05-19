@@ -1,6 +1,15 @@
 module L = MenhirLib.LexerUtil
 module E = MenhirLib.ErrorReports
 
+exception ParseError of Lexing.position * Lexing.position * string
+
+let parse_error_fmt start end_ =
+  Format.kasprintf @@ fun msg ->
+  raise (ParseError (start, end_, msg))
+
+let parse_error start end_ msg =
+  parse_error_fmt start end_ "%s" msg
+
 module type PARSER = sig
   type token
 
@@ -33,16 +42,12 @@ module Make (Parser : PARSER) = struct
     | Some (I.Element (s, _, _, _)) -> I.number s
     | None -> 0 (* FIXME *)
 
-  let succeed = Fun.id
+  let succeed v = Ok v
 
   let fail text buffer _checkpoint =
-    (* Indicate where in the input file the error occurred. *)
-    let location = L.range (E.last buffer) in
-    (* Show the tokens just before and just after the error. *)
+    let (start, end_) = E.last buffer in
     let indication = Format.sprintf "Syntax error %s.\n" (E.show (show text) buffer) in
-    (* Show these three components. *)
-    Format.eprintf "%s%s%!" location indication;
-    exit 1
+    Error (start, end_, indication)
 
   let from_string ?(filename="-") text =
     let lexbuf = L.init filename (Lexing.from_string text) in
@@ -71,4 +76,19 @@ module Make (Parser : PARSER) = struct
     let grammar = from_channel ~filename:fname ichan in
     close_in ichan;
     grammar
+
+  let from_string_exn ?filename text =
+    match from_string ?filename text with
+    | Ok v -> v
+    | Error (start, end_, msg) -> parse_error start end_ msg
+
+  let from_channel_exn ?filename text =
+    match from_channel ?filename text with
+    | Ok v -> v
+    | Error (start, end_, msg) -> parse_error start end_ msg
+
+  let from_file_exn filename =
+    match from_file filename with
+    | Ok v -> v
+    | Error (start, end_, msg) -> parse_error start end_ msg
 end

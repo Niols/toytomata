@@ -8,9 +8,9 @@ type cfg = CFG.cfg
 
 (** {3 Parsing & Printing} *)
 
-let cfg_from_channel = CFG.from_channel
-let cfg_from_string = CFG.from_string
-let cfg_from_file = CFG.from_file
+let cfg_from_channel_exn = CFG.from_channel_exn
+let cfg_from_string_exn = CFG.from_string_exn
+let cfg_from_file_exn = CFG.from_file_exn
 
 let pp_cfg = CFG.pp
 let cfg_to_channel = CFG.to_channel
@@ -23,9 +23,9 @@ type pda = PDA.pda
 
 (** {3 Parsing & Printing} *)
 
-let pda_from_channel = PDA.from_channel
-let pda_from_string = PDA.from_string
-let pda_from_file = PDA.from_file
+let pda_from_channel_exn = PDA.from_channel_exn
+let pda_from_string_exn = PDA.from_string_exn
+let pda_from_file_exn = PDA.from_file_exn
 
 let pp_pda = PDA.pp
 let pda_to_channel = PDA.to_channel
