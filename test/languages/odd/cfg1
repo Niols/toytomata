@@ -1,0 +1,4 @@
+entrypoint S
+S -> LE
+L -> a | b
+E -> epsilon | LLE

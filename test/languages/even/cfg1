@@ -1,0 +1,3 @@
+entrypoint S
+S -> epsilon | LLS
+L -> a | b
