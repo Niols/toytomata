@@ -1,7 +1,7 @@
 open Ext
 open Common
 
-let length_limit = 10
+let length_limit = 13
 
 let failure = ref false
 let fail () = failure := true
