@@ -14,3 +14,7 @@ val letters : t -> Letter.t Seq.t
 val letters_list : t -> Letter.t list
 
 val equal : t -> t -> bool
+
+val union : t -> t -> t
+
+val length : t -> int

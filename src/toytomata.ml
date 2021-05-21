@@ -1,5 +1,5 @@
-open Ext
 open Toytomata
+open Common
 
 let pf = Format.printf
 let spf = Format.sprintf
@@ -104,11 +104,11 @@ let pdas =
 let () = pf "@\nI have got %d PDAs to work with.@." (List.length pdas)
 
 let alphabet =
-  List.fold_left (fun alphabet pda -> PDA.alphabet pda @ alphabet) [] pdas
-  |> List.sort_uniq compare
+  List.map PDA.alphabet pdas
+  |> List.fold_left Alphabet.union Alphabet.empty
 
-let () = pf "Their smallest common alphabet has %d letters and is: %s.@."
-    (List.length alphabet) (String.concat ", " alphabet)
+let () = pf "Their smallest common alphabet has %d letters and is: %a.@."
+    (Alphabet.length alphabet) (Alphabet.pp ", ") alphabet
 
 let () = pf "I shall test all the given PDAs on all the possible words by increasing length.
 I will print the first %d accepted words.
@@ -122,7 +122,7 @@ let pp_word fmt = function
 
 let nb_printed_words = ref 0
 
-let rec test_all_words length words_and_confs =
+let rec test_all_words length (words_and_confs : (string list * PDA.Runner.configuration list) list) =
   pf "\r[%d] @?" length;
 
   (* Check that all PDA configurations agree on all the words. If they agree and
@@ -166,9 +166,12 @@ let rec test_all_words length words_and_confs =
     words_and_confs;
 
   let next_words_and_confs =
-    words_and_confs |> List.concat_map @@ fun (word, confs) ->
-    alphabet |> List.map @@ fun a ->
-    (a :: word, List.map (PDA.Runner.step_letter a) confs)
+    words_and_confs
+    |> List.concat_map
+      (fun (word, confs) ->
+         Alphabet.letters_list alphabet |> List.map @@ fun a ->
+         (Letter.to_string a :: word,
+          List.map (PDA.Runner.step_letter a) confs))
   in
 
   test_all_words (length + 1) next_words_and_confs

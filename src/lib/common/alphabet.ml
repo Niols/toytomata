@@ -27,3 +27,8 @@ let letters a = List.to_seq a
 let letters_list a = a
 
 let equal = (=)
+
+let union a1 a2 =
+  add_letters (letters a1) a2
+
+let length a = letters_list a |> List.length
