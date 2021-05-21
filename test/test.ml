@@ -23,7 +23,7 @@ let fail () =
 let get_words lang_dir =
   let lang =
     Filename.concat lang_dir "words"
-    |> LanguagePrefix.from_file
+    |> LanguagePrefix.from_file_exn
   in
   Format.eprintf "has %s %d words@\n"
     (if LanguagePrefix.is_complete lang then "exactly" else "at least")
