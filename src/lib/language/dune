@@ -1,9 +1,10 @@
 (library
- (name LanguageRepresentation)
- (public_name toytomata.language-representation)
+ (name Language)
+ (public_name toytomata.language)
  (libraries
   toytomata.ext
   toytomata.common
+  toytomata.language-prefix
   toytomata.cfg
   toytomata.pda)
  (preprocess (pps ppx_deriving.std)))

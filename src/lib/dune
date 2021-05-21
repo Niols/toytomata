@@ -3,7 +3,7 @@
  (public_name toytomata)
  (libraries
   toytomata.common
-  toytomata.language-representation
+  toytomata.language
   toytomata.language-prefix
   toytomata.cfg
   toytomata.pda))

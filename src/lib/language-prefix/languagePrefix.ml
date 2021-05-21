@@ -3,6 +3,7 @@ open Common
 
 include AST
 include Parser
+include Printer
 
 let is_complete p = (kind p) = Complete
 let is_incomplete p = (kind p) = Incomplete

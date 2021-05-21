@@ -1,7 +1,7 @@
 open Common
 open AST
 
-let from_file fname =
+let from_file_exn fname =
   let ichan = open_in fname in
   let word_of_word word =
     String.to_seq word
@@ -27,3 +27,6 @@ let from_file fname =
       from_word_list ~kind:Complete (List.rev lines)
   in
   parse []
+
+let from_channel_exn _ = assert false
+let from_string_exn _ = assert false
