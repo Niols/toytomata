@@ -102,17 +102,22 @@ let states pda =
 let letters pda =
   transitions pda
   |> Seq.filter_map (fun (_, _, (a, _, _)) -> a)
-  (* notice that a is a letter option *)
-  |> List.of_seq
-  |> List.sort_uniq compare
+(* notice that a is a letter option, hence the [filter_map] *)
 
-let alphabet = letters
+let letters_list pda =
+  List.of_seq (letters pda)
 
-let symbols pda =
+let alphabet pda =
+  Alphabet.from_letters (letters pda)
+
+let symbols_list pda =
   transitions_list pda
   |> List.concat_map (fun (_, _, (_, s, s')) -> List.filter_map Fun.id [s; s'])
   (* notice that s and s' are symbol options *)
   |> List.sort_uniq compare
+
+let symbols pda =
+  List.to_seq (symbols_list pda)
 
 (** {3 Writing PDAs} *)
 

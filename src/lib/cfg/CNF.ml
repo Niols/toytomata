@@ -27,7 +27,7 @@ let from_cfg cfg =
   (match entrypoints cfg with
    | [s] -> assert (convert s = 0)
    | _ -> failwith "CNF.from_cfg: can only have exactly one entrypoint");
-  nonterminals cfg |> List.iter (fun nt -> ignore (convert nt));
+  nonterminals cfg |> Seq.iter (fun nt -> ignore (convert nt));
 
   (* Create the fields of the CNF *)
   let empty = ref false in
@@ -36,7 +36,7 @@ let from_cfg cfg =
   let hints = Array.make (1 + !nb_nonterminals) (Obj.magic 0) in (* FIXME: dirty AF *)
 
   (* Register all the hints *)
-  nonterminals cfg |> List.iter (fun nt ->
+  nonterminals cfg |> Seq.iter (fun nt ->
       hints.(convert nt) <- nt
     );
 

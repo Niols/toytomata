@@ -3,13 +3,12 @@ open Ext
 type t = Letter.t list
 
 let all_words (alphabet: Alphabet.t) : t Seq.t =
-  let alphabet = List.to_seq alphabet in
   let next_words (words: 'a list Seq.t) : 'a list Seq.t =
     Seq.flat_map
       (fun word ->
          Seq.map
            (fun letter -> letter :: word)
-           alphabet)
+           (Alphabet.letters alphabet))
       words
   in
   let rec all_words words =
@@ -22,13 +21,12 @@ let all_words (alphabet: Alphabet.t) : t Seq.t =
    within the same length. *)
 
 let not_all_words (alphabet: Alphabet.t) ~(length_limit: int) : t Seq.t =
-  let alphabet = List.to_seq alphabet in
   let next_words (words: 'a list Seq.t) : 'a list Seq.t =
     Seq.flat_map
       (fun word ->
          Seq.map
            (fun letter -> letter :: word)
-           alphabet)
+           (Alphabet.letters alphabet))
       words
   in
   let rec all_words length words =
@@ -51,3 +49,9 @@ let pp fmt w =
     ~pp_sep:(fun _fmt () -> ())
     Format.pp_print_string
     fmt w
+
+let list_to_alphabet wl =
+  Alphabet.from_letters_list (List.flatten wl)
+
+let seq_to_alphabet ws =
+  list_to_alphabet (List.of_seq ws)

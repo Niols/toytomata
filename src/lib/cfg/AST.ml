@@ -4,7 +4,7 @@ open Common
 module NonTerminal = Element.Make(struct end)
 type nonterminal = NonTerminal.t
 
-type terminal = string
+type terminal = Letter.t
 
 type component = T of terminal | N of nonterminal
 
@@ -31,18 +31,23 @@ let productions_list ?from_ cfg =
 let nonterminals_from_production =
   List.filter_map (function N v -> Some v | _ -> None)
 
-let nonterminals cfg =
+let nonterminals_list cfg =
   cfg.entrypoints
   @ List.concat_map (fun (v, p) -> v :: nonterminals_from_production p) (productions_list cfg)
+
+let nonterminals cfg = List.to_seq (nonterminals_list cfg)
 
 let terminals_from_production =
   List.filter_map (function T a -> Some a | _ -> None)
 
-let terminals cfg =
+let terminals_list cfg =
   List.concat_map (fun (_, p) -> terminals_from_production p) (productions_list cfg)
   |> List.sort_uniq compare
 
-let alphabet = terminals
+let terminals cfg = List.to_seq (terminals_list cfg)
+
+let alphabet cfg =
+  Alphabet.from_letters (terminals cfg)
 
 (** {2 Creating} *)
 

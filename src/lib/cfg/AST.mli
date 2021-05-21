@@ -1,9 +1,11 @@
+open Common
+
 (** {1 Context Free Grammars} *)
 
-module NonTerminal : Common.Element.S
+module NonTerminal : Element.S
 
 type nonterminal = NonTerminal.t
-type terminal = string
+type terminal = Letter.t
 
 type cfg
 
@@ -25,11 +27,12 @@ val productions_list :
   cfg -> (nonterminal * production) list
 (** Same as {!productions} but returns a list. *)
 
-val nonterminals : cfg -> nonterminal list
+val nonterminals : cfg -> nonterminal Seq.t
+val nonterminals_list : cfg -> nonterminal list
 
-val terminals : cfg -> terminal list
-val alphabet : cfg -> terminal list
-(** Alias for {!terminals}. *)
+val terminals : cfg -> terminal Seq.t
+val terminals_list : cfg -> terminal list
+val alphabet : cfg -> Alphabet.t
 
 (** {2 Creating} *)
 

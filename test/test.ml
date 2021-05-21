@@ -31,9 +31,7 @@ let get_words lang_dir =
   lang
 
 let get_alphabet words =
-  let alphabet =
-    List.sort_uniq compare (List.flatten words)
-  in
+  let alphabet = Word.list_to_alphabet words in
   epf "over alphabet %a@\n" (Alphabet.pp ", ") alphabet;
   alphabet
 
@@ -111,13 +109,13 @@ module type Accepter = sig
 
   val key : string
 
-  val alphabet : t -> string list
-  val accepts : t -> string list -> bool
+  val alphabet : t -> Alphabet.t
+  val accepts : t -> Word.t -> bool
 end
 
 let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj : Accepter with type t = s) =
   epf "@[<h 2>checking %s `%a`... " Obj.key pp_hl_str name;
-  if List.sort compare (Obj.alphabet obj) <> alphabet then
+  if not (Alphabet.equal (Obj.alphabet obj) alphabet) then
     (
       fail ();
       epf "@\nthe alphabet of %a (%a) does not correspond to the expected one."

@@ -1,9 +1,11 @@
+open Common
+
 (** {1 PDAs} *)
 
-module State : Common.Element.S
+module State : Element.S
 
 type state = State.t
-type letter = Common.Letter.t
+type letter = Letter.t
 type symbol = string
 
 type pda
@@ -20,11 +22,12 @@ val initial_states : pda -> state list
 val final_states : pda -> state list
 val is_final : state -> pda -> bool
 
-val letters : pda -> letter list
-val alphabet : pda -> letter list
-(** Alias for {!letters}. *)
+val letters : pda -> letter Seq.t
+val letters_list : pda -> letter list
+val alphabet : pda -> Alphabet.t
 
-val symbols : pda -> symbol list
+val symbols : pda -> symbol Seq.t
+val symbols_list : pda -> symbol list
 
 val transitions :
   ?from_:state -> ?to_:state ->

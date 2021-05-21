@@ -124,7 +124,7 @@ let merge_unit_cycles cfg =
       (visited, n :: l)
   in
   let (_, l) =
-    List.fold_left
+    Seq.fold_left
       (fun (visited, l) n ->
          visit visited l n)
       (NonTerminal.Set.empty, [])
