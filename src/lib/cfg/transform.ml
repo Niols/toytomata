@@ -9,7 +9,11 @@ let extract_entrypoint cfg =
   |> add_productionss (productions_list cfg)
 
 let gen_eliminate_terminals ~always cfg =
-  let replacements = Converter.make_converter (fun a -> fresh_nonterminal ~hint:("N"^a) ()) in
+  let replacements = Converter.make_converter
+      (fun a ->
+         let a = Letter.to_string a in
+         fresh_nonterminal ~hint:("N" ^ a) ())
+  in
   let replace = Converter.convert replacements in
   cfg
   |> update_productions (fun n p ->

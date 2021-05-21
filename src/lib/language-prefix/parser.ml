@@ -1,17 +1,18 @@
+open Common
 open AST
 
 let from_file fname =
   let ichan = open_in fname in
   let word_of_word word =
     String.to_seq word
-    |> Seq.map (String.make 1)
-    |> List.of_seq
+    |> Seq.map Letter.from_char
+    |> Word.from_letters
   in
   let rec parse lines =
     match input_line ichan with
     | "" -> assert false
     | "ε" | "epsilon" -> (* FIXME: s when is_empty_word s *)
-      parse ([] :: lines)
+      parse (Word.empty :: lines)
     | "…" | "..." ->
       (
         try

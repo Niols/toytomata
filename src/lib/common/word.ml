@@ -2,7 +2,14 @@ open Ext
 
 type t = Letter.t list
 
-let all_words (alphabet: Alphabet.t) : t Seq.t =
+let empty = []
+let letters_list = Fun.id
+let letters w = List.to_seq (letters_list w)
+
+let from_letters_list = Fun.id
+let from_letters ls = from_letters_list (List.of_seq ls)
+
+let all_words alphabet =
   let next_words (words: 'a list Seq.t) : 'a list Seq.t =
     Seq.flat_map
       (fun word ->
@@ -20,7 +27,7 @@ let all_words (alphabet: Alphabet.t) : t Seq.t =
 (** The sequence of all words, by increasing length and alphabetical order
    within the same length. *)
 
-let not_all_words (alphabet: Alphabet.t) ~(length_limit: int) : t Seq.t =
+let not_all_words ~length_limit alphabet =
   let next_words (words: 'a list Seq.t) : 'a list Seq.t =
     Seq.flat_map
       (fun word ->
@@ -39,6 +46,8 @@ let not_all_words (alphabet: Alphabet.t) ~(length_limit: int) : t Seq.t =
   |> Seq.flatten
   |> Seq.map List.rev
 
+let equal = List.equal Letter.equal
+
 let compare w1 w2 =
   let c = Int.compare (List.length w1) (List.length w2) in
   if c <> 0 then c
@@ -47,7 +56,7 @@ let compare w1 w2 =
 let pp fmt w =
   Format.pp_print_list
     ~pp_sep:(fun _fmt () -> ())
-    Format.pp_print_string
+    Letter.pp
     fmt w
 
 let list_to_alphabet wl =

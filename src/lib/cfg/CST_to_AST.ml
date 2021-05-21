@@ -6,7 +6,7 @@ let make__nonterminal'__to__nonterminal () =
   Converter.make_convert (fun v -> fresh_nonterminal ~hint:v ())
 
 let component__to__component n'2n  = function
-  | CST.T a -> T (CSTHelpers.value a)
+  | CST.T a -> T (Letter.from_string (CSTHelpers.value a))
   | CST.N v -> N (n'2n v)
 
 let component'__to__component n'2n c =

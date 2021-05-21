@@ -12,6 +12,7 @@ let pda__to__pda pda =
     (fun (q, q', (a, s, s')) ->
        let q = l (State.to_string q) in
        let q' = l (State.to_string q') in
+       let a = Option.map Letter.to_string a in
        let t = (l a, l s, l s') in
        l (CST.Transition (q, q', [t])))
     (transitions_list pda)

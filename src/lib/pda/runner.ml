@@ -1,3 +1,5 @@
+open Common
+
 open Ext
 open AST
 
@@ -81,7 +83,8 @@ let steps_only_empty (pda, confs) =
 let step_letter a conf = conf |> steps_only_empty |> step_only_letter a
 
 let steps_word word conf =
-  List.fold_left (fun conf a -> step_letter a conf) conf word
+  Word.letters word
+  |> Seq.fold_left (fun conf a -> step_letter a conf) conf
 
 let accepting conf =
   let (pda, confs) = steps_only_empty conf in

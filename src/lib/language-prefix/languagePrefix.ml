@@ -10,6 +10,7 @@ let is_incomplete p = (kind p) = Incomplete
 let length p = List.length (words_list p)
 
 let alphabet p =
-  words_list p
-  |> List.flatten
-  |> Alphabet.from_letters_list
+  words p
+  |> Seq.map Word.letters
+  |> Seq.flatten
+  |> Alphabet.from_letters

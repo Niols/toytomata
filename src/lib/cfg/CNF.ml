@@ -109,6 +109,7 @@ let parse g s =
   p.(n-1).(0).(0)
 
 let parse g s =
+  let s = Array.of_seq (Word.letters s) in
   if s = [||] then
     if g.empty then Some EProd
     else None
@@ -121,9 +122,9 @@ let pp_parsetree g fmt (i, pt) =
       Format.fprintf fmt "%s -> ε"
         (NonTerminal.to_string g.hints.(i))
     | TProd t ->
-      Format.fprintf fmt "%s -> %s"
+      Format.fprintf fmt "%s -> %a"
         (NonTerminal.to_string g.hints.(i))
-        t
+        Letter.pp t
     | NTProd ((b, ptb), (c, ptc)) ->
       Format.fprintf fmt "@[<h 2>%s -> %s %s@\n%a@\n%a@]"
         (NonTerminal.to_string g.hints.(i))
@@ -139,6 +140,8 @@ let accepts g s =
 
 let%test_module _ =
   (module struct
+    let t s = T (Letter.from_string s)
+
     let cnf =
       let cfg =
         (* Example taken from Wikipedia *)
@@ -156,19 +159,22 @@ let%test_module _ =
           (s,   [N np;  N vp]); (*   S ->  NP VP *)
           (vp,  [N vp;  N pp]); (*  VP ->  VP PP *)
           (vp,  [N v;   N np]); (*  VP ->  V  NP *)
-          (vp,  [T "eats"]);    (*  VP -> eats   *)
+          (vp,  [t "eats"]);    (*  VP -> eats   *)
           (pp,  [N p;   N np]); (*  PP ->  P  NP *)
           (np,  [N det; N n ]); (*  NP -> Det N  *)
-          (np,  [T "she"]);     (*  NP -> she    *)
-          (v,   [T "eats"]);    (*   V -> eats   *)
-          (p,   [T "with"]);    (*   P -> with   *)
-          (n,   [T "fish"]);    (*   N -> fish   *)
-          (n,   [T "fork"]);    (*   N -> fork   *)
-          (det, [T "a"]);       (* Det -> a      *)
+          (np,  [t "she"]);     (*  NP -> she    *)
+          (v,   [t "eats"]);    (*   V -> eats   *)
+          (p,   [t "with"]);    (*   P -> with   *)
+          (n,   [t "fish"]);    (*   N -> fish   *)
+          (n,   [t "fork"]);    (*   N -> fork   *)
+          (det, [t "a"]);       (* Det -> a      *)
         ]
       in
       from_cfg cfg
 
-    let%test _ = accepts cnf [|"she"; "eats"; "a"; "fish"; "with"; "a"; "fork"|]
-    let%test _ = not (accepts cnf [|"she"; "eats"; "fish"; "with"; "fork"|])
+    let accepts cnf w =
+      accepts cnf (Word.from_letters_list (List.map Letter.from_string w))
+
+    let%test _ = accepts cnf ["she"; "eats"; "a"; "fish"; "with"; "a"; "fork"]
+    let%test _ = not (accepts cnf ["she"; "eats"; "fish"; "with"; "fork"])
   end)

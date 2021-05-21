@@ -5,7 +5,7 @@ let l = CSTHelpers.dummily
 let ll = List.map l
 
 let component__to__component = function
-  | T a -> CST.T (l a)
+  | T a -> CST.T (l (Letter.to_string a))
   | N v -> CST.N (l (NonTerminal.to_string v))
 
 let component__to__component' c =

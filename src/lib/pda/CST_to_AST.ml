@@ -7,7 +7,7 @@ let make__state'__to__state () =
   CSTHelpers.map_ignore_located @@
   Converter.make_convert (fun _ -> fresh_state ())
 
-let letter__to__letter = Fun.id
+let letter__to__letter = Option.map Letter.from_string
 let letter'__to__letter a = CSTHelpers.map_ignore_located letter__to__letter a
 
 let symbol__to__symbol = Fun.id
