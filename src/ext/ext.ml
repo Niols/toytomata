@@ -1,4 +1,3 @@
-module List = ExtList
 module Seq = ExtSeq
 module Stack = ExtStack
 
