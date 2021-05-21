@@ -21,20 +21,20 @@ let fail () =
   failure := true
 
 let get_words lang_dir =
-  let (complete, words) =
+  let lang =
     Filename.concat lang_dir "words"
-    |> WordsParser.parse
+    |> LanguagePrefix.from_file
   in
   Format.eprintf "has %s %d words@\n"
-    (match complete with Complete -> "exactly" | Incomplete -> "at least")
-    (List.length words);
-  (complete, words)
+    (if LanguagePrefix.is_complete lang then "exactly" else "at least")
+    (LanguagePrefix.length lang);
+  lang
 
 let get_alphabet words =
   let alphabet =
     List.sort_uniq compare (List.flatten words)
   in
-  epf "over alphabet %a@\n" (Word.pp_alphabet ", ") alphabet;
+  epf "over alphabet %a@\n" (Alphabet.pp ", ") alphabet;
   alphabet
 
 let get_filenames lang_dir prefix =
@@ -64,7 +64,7 @@ let get_pdas lang_dir =
 
 let rec compare_words_sequences sref complete name stest =
   match sref () with
-  | Seq.Nil when complete = WordsParser.Incomplete ->
+  | Seq.Nil when not complete ->
     (
       match stest () with
       | Seq.Nil ->
@@ -121,14 +121,13 @@ let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj 
     (
       fail ();
       epf "@\nthe alphabet of %a (%a) does not correspond to the expected one."
-        pp_hl_str name (Word.pp_alphabet ", ") (Obj.alphabet obj)
+        pp_hl_str name (Alphabet.pp ", ") (Obj.alphabet obj)
     );
   Word.not_all_words ~length_limit alphabet
   |> Seq.filter (Obj.accepts obj) (* much faster than (fun word -> Obj.accepts obj word) *)
   (* note that this sequence never ends; in particular, if there are no more
      words recognised by the object, then the filter just hangs forever *)
-  |> compare_words_sequences
-    (List.to_seq words) complete name;
+  |> compare_words_sequences words complete name;
   epf "@]@\n"
 
 let check_cfg words complete alphabet (name, cfg) =
@@ -139,8 +138,10 @@ let check_pda words complete alphabet (name, pda) =
 
 let check_language lang lang_dir =
   epf "@[<h 2>Language `%a`:@\n" pp_hl_str lang;
-  let (complete, words) = get_words lang_dir in
-  let alphabet = get_alphabet words in
+  let lang = get_words lang_dir in
+  let alphabet = LanguagePrefix.alphabet lang in
+  let words = LanguagePrefix.words lang in
+  let complete = LanguagePrefix.is_complete lang in
   let cfgs = get_cfgs lang_dir in
   let pdas = get_pdas lang_dir in
   List.iter (check_cfg words complete alphabet) cfgs;

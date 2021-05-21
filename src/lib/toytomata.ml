@@ -42,3 +42,4 @@ let pda_to_cfg = PDA.to_cfg
 module Common = Common
 module CFG = CFG
 module PDA = PDA
+module LanguagePrefix = LanguagePrefix

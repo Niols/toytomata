@@ -4,5 +4,6 @@
  (libraries
   toytomata.common
   toytomata.language-representation
+  toytomata.language-prefix
   toytomata.cfg
   toytomata.pda))

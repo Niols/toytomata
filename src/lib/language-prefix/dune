@@ -1,0 +1,4 @@
+(library
+ (name LanguagePrefix)
+ (public_name toytomata.language-prefix)
+ (libraries toytomata.common))
