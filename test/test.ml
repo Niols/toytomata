@@ -110,7 +110,7 @@ module type Accepter = sig
   val key : string
 
   val alphabet : t -> Alphabet.t
-  val accepts : t -> Word.t -> bool
+  val accepts : t -> Word.t -> [`True | `False]
 end
 
 let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj : Accepter with type t = s) =
@@ -122,7 +122,11 @@ let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj 
         pp_hl_str name (Alphabet.pp ", ") (Obj.alphabet obj)
     );
   Word.not_all_words ~length_limit alphabet
-  |> Seq.filter (Obj.accepts obj) (* much faster than (fun word -> Obj.accepts obj word) *)
+  |> Seq.filter
+    (let accepts = Obj.accepts obj in
+     fun word -> accepts word = `True)
+  (* much faster than (fun word -> Obj.accepts obj word = `True) because there
+     is a pre-computation after the first argument *)
   (* note that this sequence never ends; in particular, if there are no more
      words recognised by the object, then the filter just hangs forever *)
   |> compare_words_sequences words complete name;

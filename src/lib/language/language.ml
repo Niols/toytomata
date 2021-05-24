@@ -1,3 +1,5 @@
+open Common
+
 type t =
   | CFG of CFG.t
   | PDA of PDA.t
@@ -17,6 +19,8 @@ module type S = sig
   val to_channel : out_channel -> t -> unit
   val to_string : t -> string
   val to_file : string -> t -> unit
+
+  val accepts : t -> Word.t -> DecisionResponse.t
 end
 
 type wrapper = Wrapper : (module S with type t = 'a) * ('a -> t) -> wrapper
@@ -57,16 +61,18 @@ let from_file_exn fname =
   first_wrapper_success_exn @@ fun (Wrapper ((module Obj), wrapper)) ->
   wrapper (Obj.from_file_exn fname)
 
-let to_channel ochan (Wrapped ((module Obj), obj)) =
+let to_channel ochan obj =
+  let Wrapped ((module Obj), obj) = obj in
   Obj.to_channel ochan obj
 
-let to_string (Wrapped ((module Obj), obj)) =
+let to_string obj =
+  let Wrapped ((module Obj), obj) = obj in
   Obj.to_string obj
 
-let to_file fname (Wrapped ((module Obj), obj)) =
+let to_file fname obj =
+  let Wrapped ((module Obj), obj) = obj in
   Obj.to_file fname obj
 
-let accepts = function
-  | CFG cfg -> CFG.accepts cfg
-  | PDA pda -> PDA.accepts pda
-  | Prefix _ -> assert false
+let accepts obj =
+  let Wrapped ((module Obj), obj) = wrap obj in
+  Obj.accepts obj
