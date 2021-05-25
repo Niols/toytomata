@@ -2,6 +2,8 @@ include module type of Seq
 
 val flatten : 'a t t -> 'a t
 
+val iteri : (int -> 'a -> unit) -> 'a t -> unit
+
 val iter2 : ('a -> 'b -> unit) -> 'a t -> 'b t -> unit
 (** Same as [List.iter2] but for sequences. The [Invalid_argument] exception is
     raised only when the end is reached. *)

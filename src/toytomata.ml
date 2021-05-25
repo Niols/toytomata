@@ -1,3 +1,4 @@
+open Ext
 open Toytomata
 open Common
 
@@ -122,58 +123,41 @@ let pp_word fmt = function
 
 let nb_printed_words = ref 0
 
-let rec test_all_words length (words_and_confs : (string list * PDA.Runner.configuration list) list) =
-  pf "\r[%d] @?" length;
+let accepts = List.map PDA.accepts pdas
 
-  (* Check that all PDA configurations agree on all the words. If they agree and
-     accept, print the word. If they disagree, report and exit. *)
-  List.iter
-    (fun (word, confs) ->
-       let acceptance = List.map PDA.Runner.accepting confs in
-       if List.for_all not acceptance then
-         ()
-       else if List.for_all Fun.id acceptance then
-         (
-           if !nb_printed_words < !nb_words then
-             (
-               incr nb_printed_words;
-               pf "%a" pp_word (List.rev word);
-               if !nb_printed_words = !nb_words then
-                 (
-                   pf " (last printed one)";
-                   if List.length pdas <= 1 then
-                     (
-                       pf "@.";
-                       exit 0
-                     )
-                 );
-               pf "@\n\r[%d] @?" length
-             )
-         )
-       else
-         (
-           pf "The word %a differentiates these PDAs.@." pp_word (List.rev word);
-           let acceptance = List.mapi (fun i b -> (i, b)) acceptance in
-           let (accept, reject) = List.partition snd acceptance in
-           let accept_str = accept |> List.map fst |> List.map ((+) 1) |> List.map soi |> List.map ((^) "#") |> String.concat ", " in
-           let reject_str = reject |> List.map fst |> List.map ((+) 1) |> List.map soi |> List.map ((^) "#") |> String.concat ", " in
-           pf "PDA%s %s accept it.@\nPDA%s %s reject it.@."
-             (if List.compare_length_with accept 1 > 0 then "s" else "") accept_str
-             (if List.compare_length_with reject 1 > 0 then "s" else "") reject_str;
-           exit 1
-         )
+let () =
+  Word.all_words alphabet
+  |> Seq.iter @@ fun word ->
+  let acceptance = List.map ((|>) word) accepts in
+  if List.for_all (function `False -> true | _ -> false) acceptance then
+    ()
+  else if List.for_all (function `True -> true | _ -> false) acceptance then
+    (
+      if !nb_printed_words < !nb_words then
+        (
+          incr nb_printed_words;
+          pf "%a" Word.pp word;
+          if !nb_printed_words = !nb_words then
+            (
+              pf " (last printed one)";
+              if List.length pdas <= 1 then
+                (
+                  pf "@.";
+                  exit 0
+                )
+            );
+          pf "@\n\r[%d] @?" (Word.length word)
+        )
     )
-    words_and_confs;
-
-  let next_words_and_confs =
-    words_and_confs
-    |> List.concat_map
-      (fun (word, confs) ->
-         Alphabet.letters_list alphabet |> List.map @@ fun a ->
-         (Letter.to_string a :: word,
-          List.map (PDA.Runner.step_letter a) confs))
-  in
-
-  test_all_words (length + 1) next_words_and_confs
-
-let () = test_all_words 0 [([], List.map PDA.Runner.initial pdas)]
+  else
+    (
+      pf "The word %a differentiates these PDAs.@." Word.pp word;
+      List.iteri
+        (fun i acceptance ->
+           pf "PDA %d %s@." (i+1)
+             (match acceptance with
+              | `True -> "accepts it"
+              | `False -> "rejects it"))
+        acceptance;
+      exit 1
+    )

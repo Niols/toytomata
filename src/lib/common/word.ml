@@ -64,3 +64,5 @@ let list_to_alphabet wl =
 
 let seq_to_alphabet ws =
   list_to_alphabet (List.of_seq ws)
+
+let length = List.length

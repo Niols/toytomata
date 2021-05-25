@@ -18,3 +18,5 @@ val pp : Format.formatter -> t -> unit
 
 val seq_to_alphabet : t Seq.t -> Alphabet.t
 val list_to_alphabet : t list -> Alphabet.t
+
+val length : t -> int

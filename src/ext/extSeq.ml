@@ -13,6 +13,16 @@ let rec flatten ss =
   | Nil -> Nil
   | Cons (s, ss) -> append s (flatten ss) ()
 
+let iteri f s =
+  let rec iteri i s =
+    match s () with
+    | Nil -> ()
+    | Cons (x, s) ->
+      f i x;
+      iteri (i+1) s
+  in
+  iteri 0 s
+
 let rec iter2 f s1 s2 =
   match s1 (), s2 () with
   | Nil, Nil -> ()
