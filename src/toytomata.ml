@@ -65,65 +65,38 @@ let spec =
 let () =
   Arg.parse spec anonymous usage_str
 
-let pdas =
+let languages =
   all_inputs () |> List.mapi @@ fun i input ->
-  pf "@\nPDA #%d:@." (i + 1);
-  match input.kind with
-  | PDA ->
-    (
-      match input.source with
-      | FromFile fname ->
-        pf "Reading from file \"%s\".@." fname;
-        PDA.from_file_exn fname
-      | FromString str ->
-        pf "Reading from string \"%s\".@." str;
-        PDA.from_string_exn str
-      | FromStdin ->
-        pf "Please enter a PDA (end it with Ctrl+D):@.";
-        PDA.from_channel_exn stdin
-    )
-  | CFG ->
-    (
-      pf "Getting a CFG and converting it later.@.";
-      let cfg =
-        match input.source with
-        | FromFile fname ->
-          pf "Reading from file \"%s\".@." fname;
-          CFG.from_file_exn fname
-        | FromString str ->
-          pf "Reading from string \"%s\".@." str;
-          CFG.from_string_exn str
-        | FromStdin ->
-          pf "Please enter a CFG (end it with Ctrl+D):@.";
-          CFG.from_channel_exn stdin
-      in
-      let pda = cfg_to_pda cfg in
-      pf "I have converted it to the following PDA:@\n%a@?" PDA.pp pda;
-      pda
-    )
+  pf "@\nLanguage #%d:@." (i + 1);
+  match input.source with
+  | FromFile fname ->
+    pf "Reading from file \"%s\".@." fname;
+    Language.from_file_exn fname
+  | FromString str ->
+    pf "Reading from string \"%s\".@." str;
+    Language.from_string_exn str
+  | FromStdin ->
+    pf "Please enter a PDA (end it with Ctrl+D):@.";
+    Language.from_channel_exn stdin
 
-let () = pf "@\nI have got %d PDAs to work with.@." (List.length pdas)
+let () = pf "@\nI have got %d languages to work with.@." (List.length languages)
 
 let alphabet =
-  List.map PDA.alphabet pdas
+  List.map Language.alphabet languages
   |> List.fold_left Alphabet.union Alphabet.empty
 
 let () = pf "Their smallest common alphabet has %d letters and is: %a.@."
     (Alphabet.length alphabet) (Alphabet.pp ", ") alphabet
 
-let () = pf "I shall test all the given PDAs on all the possible words by increasing length.
+let () = pf "I shall test all the given languages on all the possible words by increasing length.
 I will print the first %d accepted words.
 I will stop as soon as I find a word that differenciates these PDAs.
 I will not stop otherwise until I am killed (with Ctrl+C).@."
     !nb_words
 
-let pp_word fmt = function
-  | [] -> Format.pp_print_string fmt "λ"
-  | word -> Format.(pp_print_list ~pp_sep:(fun _fmt () -> ()) pp_print_string) fmt word
-
 let nb_printed_words = ref 0
 
-let accepts = List.map PDA.accepts pdas
+let accepts = List.map Language.accepts languages
 
 let () =
   Word.all_words alphabet
@@ -140,7 +113,7 @@ let () =
           if !nb_printed_words = !nb_words then
             (
               pf " (last printed one)";
-              if List.length pdas <= 1 then
+              if List.length languages <= 1 then
                 (
                   pf "@.";
                   exit 0
@@ -154,10 +127,11 @@ let () =
       pf "The word %a differentiates these PDAs.@." Word.pp word;
       List.iteri
         (fun i acceptance ->
-           pf "PDA %d %s@." (i+1)
+           pf "Language %d %s@." (i+1)
              (match acceptance with
               | `True -> "accepts it"
-              | `False -> "rejects it"))
+              | `False -> "rejects it"
+              | `DontKnow _ -> "does not know"))
         acceptance;
       exit 1
     )

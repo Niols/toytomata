@@ -12,6 +12,7 @@ module type S = sig
   val to_string : t -> string
   val to_file : string -> t -> unit
 
+  val alphabet : t -> Alphabet.t
   val accepts : t -> Word.t -> DecisionResponse.t
 end
 

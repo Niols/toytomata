@@ -25,6 +25,10 @@ let to_file fname obj =
   let Wrapped ((module Obj), obj) = wrap obj in
   Obj.to_file fname obj
 
+let alphabet obj =
+  let Wrapped ((module Obj), obj) = wrap obj in
+  Obj.alphabet obj
+
 let accepts obj =
   let Wrapped ((module Obj), obj) = wrap obj in
   Obj.accepts obj
