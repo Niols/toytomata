@@ -9,7 +9,7 @@ type configuration = pda * (state * stack) list
 
 let initial pda =
   let conf =
-    initial_states pda
+    initial_states_list pda
     |> List.map (fun q -> (q, Stack.empty))
   in
   (pda, conf)

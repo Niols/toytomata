@@ -6,8 +6,8 @@ let l = CSTHelpers.dummily
 let ll = List.map l
 
 let pda__to__pda pda =
-  (pda |> initial_states |> List.map State.to_string |> ll |> (fun ss -> CST.Initials ss) |> l)
-  :: (pda |> final_states |> List.map State.to_string |> ll |> (fun ss -> CST.Finals ss) |> l)
+  (pda |> initial_states_list |> List.map State.to_string |> ll |> (fun ss -> CST.Initials ss) |> l)
+  :: (pda |> final_states_list |> List.map State.to_string |> ll |> (fun ss -> CST.Finals ss) |> l)
   :: List.map
     (fun (q, q', (a, s, s')) ->
        let q = l (State.to_string q) in

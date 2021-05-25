@@ -17,9 +17,16 @@ type stack_transition = symbol option * symbol option
 
 (** {2 Reading PDAs} *)
 
-val states : pda -> state list
-val initial_states : pda -> state list
-val final_states : pda -> state list
+val states : pda -> state Seq.t
+val states_list : pda -> state list
+
+val initial_states : pda -> state Seq.t
+val initial_states_list : pda -> state list
+
+val final_states : pda -> state Seq.t
+val final_states_list : pda -> state list
+
+val is_initial : state -> pda -> bool
 val is_final : state -> pda -> bool
 
 val letters : pda -> letter Seq.t

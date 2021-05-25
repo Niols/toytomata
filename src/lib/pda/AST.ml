@@ -21,14 +21,17 @@ type pda =
 
 (** {2 Reading PDAs} *)
 
-let initial_states pda =
-  pda.initials
+let initial_states_list pda = pda.initials
+let initial_states pda = List.to_seq (initial_states_list pda)
 
-let final_states pda =
-  pda.finals
+let is_initial q pda =
+  initial_states_list pda |> List.mem q
+
+let final_states_list pda = pda.finals
+let final_states pda = List.to_seq (final_states_list pda)
 
 let is_final q pda =
-  final_states pda |> List.mem q
+  final_states_list pda |> List.mem q
 
 type transition = letter option * symbol option * symbol option
 
@@ -91,13 +94,16 @@ let epsilon_transitions_from q pda =
       | None -> []
       | Some ts -> ts)
 
-let states pda =
-  (
-    initial_states pda
-    @ final_states pda
-    @ List.concat_map (fun (q, q', _) -> [q; q']) (transitions_list pda)
-  )
-  |> List.sort_uniq compare
+let states_list pda =
+  Seq.append
+    (initial_states pda)
+    (Seq.append
+       (final_states pda)
+       (Seq.flat_map (fun (q, q', _) -> Seq.(cons q (cons q' empty))) (transitions pda)))
+  |> List.of_seq
+  |> List.sort_uniq State.compare
+
+let states pda = List.to_seq (states_list pda)
 
 let letters pda =
   transitions pda

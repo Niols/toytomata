@@ -12,8 +12,8 @@ let split_pop_push pda =
          pda')
     AST.empty_pda
     (AST.transitions_list pda)
-  |> AST.add_initials (AST.initial_states pda)
-  |> AST.add_finals (AST.final_states pda)
+  |> AST.add_initials (AST.initial_states_list pda)
+  |> AST.add_finals (AST.final_states_list pda)
 
 let pda_to_cfg pda =
   let nonterminal_of_states_pair =
@@ -74,9 +74,9 @@ let pda_to_cfg pda =
                     (AST.transitions_list ~from_:p pda)
                 ))
            cfg
-           (AST.states pda))
+           (AST.states_list pda))
       cfg
-      (AST.states pda)
+      (AST.states_list pda)
   in
   let cfg =
     List.fold_left
@@ -86,8 +86,8 @@ let pda_to_cfg pda =
               let v_qq' = nonterminal_of_states_pair q q' in
               CFG.add_entrypoint v_qq' cfg)
            cfg
-           (AST.final_states pda))
+           (AST.final_states_list pda))
       cfg
-      (AST.initial_states pda)
+      (AST.initial_states_list pda)
   in
   cfg
