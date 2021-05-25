@@ -58,8 +58,4 @@ let to_file fname g = g |> ast_to_cst |> cst_to_file fname
 let to_cfg = PDA_to_CFG.pda_to_cfg
 let from_cfg = CFG_to_PDA.cfg_to_pda
 
-let accepts pda word =
-  if Runner.accepts pda word then
-    `True
-  else
-    `False
+let accepts pda = CFG.accepts (to_cfg pda)
