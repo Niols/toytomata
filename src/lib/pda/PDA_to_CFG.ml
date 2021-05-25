@@ -1,3 +1,4 @@
+open Ext
 open Common
 
 let split_pop_push pda =
@@ -22,72 +23,70 @@ let pda_to_cfg pda =
   in
   let pda = split_pop_push pda in
   let cfg = CFG.empty_cfg in
+
   let cfg =
-    (* For each pair of states p and r: *)
-    List.fold_left
-      (fun cfg p ->
-         List.fold_left
-           (fun cfg r ->
-              let v_pr = nonterminal_of_states_pair p r in
-              if p = r then
-                (
-                  CFG.add_production v_pr [] cfg
-                )
-              else
-                (
-                  (* For each transition p -- a,s/s' -> p' *)
-                  List.fold_left
-                    (fun cfg (_, p', (a, s, s')) ->
-                       match s, s' with
-                       | None, None ->
-                         (
-                           (* Transition without stack *)
-                           let v_p'r = nonterminal_of_states_pair p' r in
+    (* for each pair of states p and r *)
+    Seq.fold_left_pairs
+      (fun cfg p r ->
+         let v_pr = nonterminal_of_states_pair p r in
+         if p = r then
+           (
+             CFG.add_production v_pr [] cfg
+           )
+         else
+           (
+             (* For each transition p -- a,s/s' -> p' *)
+             List.fold_left
+               (fun cfg (_, p', (a, s, s')) ->
+                  match s, s' with
+                  | None, None ->
+                    (
+                      (* Transition without stack *)
+                      let v_p'r = nonterminal_of_states_pair p' r in
+                      CFG.add_production v_pr
+                        ((match a with None -> [] | Some a -> [CFG.T a]) @ [CFG.N v_p'r])
+                        cfg
+                    )
+                  | Some _, None ->
+                    (
+                      (* We don't handle pop transitions in themselves. *)
+                      cfg
+                    )
+                  | None, Some s' ->
+                    (
+                      (* For each transition q -- b,X/lambda -> q' *)
+                      List.fold_left
+                        (fun cfg (q, q', (b, _, _)) ->
+                           let v_p'q = nonterminal_of_states_pair p' q in
+                           let v_q'r = nonterminal_of_states_pair q' r in
                            CFG.add_production v_pr
-                             ((match a with None -> [] | Some a -> [CFG.T a]) @ [CFG.N v_p'r])
+                             ((match a with None -> [] | Some a -> [CFG.T a])
+                              @ [CFG.N v_p'q]
+                              @ (match b with None -> [] | Some b -> [CFG.T b])
+                              @ [CFG.N v_q'r])
                              cfg
-                         )
-                       | Some _, None ->
-                         (
-                           (* We don't handle pop transitions in themselves. *)
-                           cfg
-                         )
-                       | None, Some s' ->
-                         (
-                           (* For each transition q -- b,X/lambda -> q' *)
-                           List.fold_left
-                             (fun cfg (q, q', (b, _, _)) ->
-                                let v_p'q = nonterminal_of_states_pair p' q in
-                                let v_q'r = nonterminal_of_states_pair q' r in
-                                CFG.add_production v_pr
-                                  ((match a with None -> [] | Some a -> [CFG.T a])
-                                   @ [CFG.N v_p'q]
-                                   @ (match b with None -> [] | Some b -> [CFG.T b])
-                                   @ [CFG.N v_q'r])
-                                  cfg
-                             )
-                             cfg
-                             (AST.transitions_list ~that_pop:(Some s') pda)
-                         )
-                       | Some _, Some _ -> assert false)
-                    cfg
-                    (AST.transitions_list ~from_:p pda)
-                ))
-           cfg
-           (AST.states_list pda))
+                        )
+                        cfg
+                        (AST.transitions_list ~that_pop:(Some s') pda)
+                    )
+                  | Some _, Some _ -> assert false)
+               cfg
+               (AST.transitions_list ~from_:p pda)
+           ))
       cfg
-      (AST.states_list pda)
+      (AST.states pda)
+      (AST.states pda)
   in
+
   let cfg =
-    List.fold_left
-      (fun cfg q ->
-         List.fold_left
-           (fun cfg q' ->
-              let v_qq' = nonterminal_of_states_pair q q' in
-              CFG.add_entrypoint v_qq' cfg)
-           cfg
-           (AST.final_states_list pda))
+    (* for each pair of an initial and a final state, make the corresponding
+       nonterminal an entrypoint *)
+    Seq.fold_left_pairs
+      (fun cfg q q' ->
+         let v_qq' = nonterminal_of_states_pair q q' in
+         CFG.add_entrypoint v_qq' cfg)
       cfg
-      (AST.initial_states_list pda)
+      (AST.initial_states pda)
+      (AST.final_states pda)
   in
   cfg

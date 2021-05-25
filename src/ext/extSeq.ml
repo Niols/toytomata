@@ -28,3 +28,6 @@ let rec map2 f s1 s2 =
   | Nil, _ | _, Nil -> invalid_arg "ExtSeq.map2"
   | Cons (x1, s1), Cons (x2, s2) ->
     Cons (f x1 x2, map2 f s1 s2)
+
+let fold_left_pairs f a s s' =
+  fold_left (fun a e -> fold_left (fun a e' -> f a e e') a s') a s
