@@ -121,7 +121,7 @@ let check_accepter (type s) words complete alphabet (name, (obj:s)) (module Obj 
       epf "@\nthe alphabet of %a (%a) does not correspond to the expected one."
         pp_hl_str name (Alphabet.pp ", ") (Obj.alphabet obj)
     );
-  Word.not_all_words ~length_limit alphabet
+  Word.all_words ~length_limit alphabet
   |> Seq.filter
     (let accepts = Obj.accepts obj in
      fun word -> accepts word = `True)
