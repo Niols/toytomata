@@ -1,6 +1,7 @@
 module AST = AST
 module Transform = Transform
 module CNF = CNF
+module CYK = CYK
 
 let key = "CFG"
 
@@ -60,7 +61,7 @@ let accepts cfg =
   let cfg = Transform.cnf cfg in
   let cnf = CNF.from_cfg cfg in
   fun word ->
-    if CNF.accepts cnf word then
+    if CYK.accepts cnf word then
       `True
     else
       `False
