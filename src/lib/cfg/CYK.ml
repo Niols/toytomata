@@ -6,15 +6,15 @@ type parsetree =
   | TProd of terminal
   | NTProd of (CNF.nonterminal * parsetree) * (CNF.nonterminal * parsetree)
 
-let parse g s =
-  (* input: grammar g containing [r] nonterminals [0] to [r-1] with start symbol [0]. *)
-  (* input: an array s consisting of [n] "characters" [s0] to [sn-1]. *)
-  let r = CNF.number_of_nonterminals g in
-  let n = Array.length s in
+let parse cnf a =
+  (* input: grammar [cnf] containing [r] nonterminals. *)
+  (* input: an array [a] consisting of [n] "characters" [a1] to [an]. *)
+  let r = CNF.number_of_nonterminals cnf in
+  let n = Array.length a in
 
   (* create an array of booleans of sizes n, n and r initialised to [false].
      actually, we do not need all of the second [n]. *)
-  (* p[l,i,nt] will be set to [true] if the substring of length [l+1] starting
+  (* p[l,i,nt] will be set to [true] if the substring of length [l] starting
      from [i] can be generated from the nonterminal [nt]. *)
   let p =
     Array.init n @@ fun l ->
@@ -22,33 +22,38 @@ let parse g s =
     Array.make r None
   in
 
-  for i = 0 to n-1 do
+  (* the -1 are here to respect the convention of the algorithm as presented on
+     https://en.wikipedia.org/wiki/CYK_algorithm *)
+  let a s = a.(s-1) in
+  let get l s nt = p.(l-1).(s-1).(CNF.nonterminal_index nt) in
+  let set l s nt value = p.(l-1).(s-1).(CNF.nonterminal_index nt) <- Some value in
+
+  for s = 1 to n do
     CNF.iter_terminal_productions
       (fun nt t ->
-         if t = s.(i) then
-           p.(0).(i).(CNF.nonterminal_index nt) <- Some (TProd t))
-      g
+         if Letter.equal t (a s) then
+           set 1 s nt (TProd t))
+      cnf
   done;
 
-  for l = 1 to n-1 do (* length of span *)
-    for i = 0 to n-l-1 do (* start of span *)
-      for k = 0 to l-1 do (* partition of span *)
+  for l = 2 to n do (* length of span *)
+    for s = 1 to n-l+1 do (* start of span *)
+      for p = 1 to l-1 do (* partition of span *)
         CNF.iter_nonterminal_productions
-          (fun nt b c ->
+          (fun ra rb rc ->
              match
-               p.(k).(i).(CNF.nonterminal_index b),
-               p.(l-k-1).(i+k+1).(CNF.nonterminal_index c)
+               get p s rb,
+               get (l-p) (s+p) rc
              with
              | Some ptb, Some ptc ->
-               let nt = CNF.nonterminal_index nt in
-               p.(l).(i).(nt) <- Some (NTProd ((b, ptb), (c, ptc)))
+               set l s ra (NTProd ((rb, ptb), (rc, ptc)))
              | _ -> ())
-          g
+          cnf
        done
     done
   done;
 
-  p.(n-1).(0).(0)
+  get n 1 (CNF.start cnf)
 
 let parse g s =
   let s = Array.of_seq (Word.letters s) in
