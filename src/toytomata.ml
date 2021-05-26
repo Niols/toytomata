@@ -98,40 +98,56 @@ let nb_printed_words = ref 0
 
 let accepts = List.map Language.accepts languages
 
+let check_equiacceptance word states =
+  let acceptance = List.map Language.IncrementalAcceptance.accepting states in
+  (
+    if List.for_all (function `False -> true | _ -> false) acceptance then
+      ()
+    else if List.for_all (function `True -> true | _ -> false) acceptance then
+      (
+        if !nb_printed_words < !nb_words then
+          (
+            incr nb_printed_words;
+            pf "%a" Word.pp word;
+            if !nb_printed_words = !nb_words then
+              (
+                pf " (last printed one)";
+                if true || List.length languages <= 1 then
+                  (
+                    pf "@.";
+                    exit 0
+                  )
+              );
+            pf "@\n\r[%d] @?" (Word.length word)
+          )
+      )
+    else
+      (
+        pf "The word %a differentiates these languages.@." Word.pp word;
+        List.iteri
+          (fun i acceptance ->
+             pf "Language %d %s@." (i+1)
+               (match acceptance with
+                | `True -> "accepts it"
+                | `False -> "rejects it"
+                | `DontKnow _ -> "does not know"))
+          acceptance;
+        exit 1
+      )
+  )
+
 let () =
-  Word.all_words alphabet
-  |> Seq.iter @@ fun word ->
-  let acceptance = List.map ((|>) word) accepts in
-  if List.for_all (function `False -> true | _ -> false) acceptance then
-    ()
-  else if List.for_all (function `True -> true | _ -> false) acceptance then
-    (
-      if !nb_printed_words < !nb_words then
-        (
-          incr nb_printed_words;
-          pf "%a" Word.pp word;
-          if !nb_printed_words = !nb_words then
-            (
-              pf " (last printed one)";
-              if List.length languages <= 1 then
-                (
-                  pf "@.";
-                  exit 0
-                )
-            );
-          pf "@\n\r[%d] @?" (Word.length word)
-        )
-    )
-  else
-    (
-      pf "The word %a differentiates these PDAs.@." Word.pp word;
-      List.iteri
-        (fun i acceptance ->
-           pf "Language %d %s@." (i+1)
-             (match acceptance with
-              | `True -> "accepts it"
-              | `False -> "rejects it"
-              | `DontKnow _ -> "does not know"))
-        acceptance;
-      exit 1
-    )
+  let states = List.map Language.IncrementalAcceptance.initial languages in
+  check_equiacceptance Word.empty states;
+  Word.fold_all_prefixes
+    ~at_new_length:(pf "\r[%d] @?")
+    (fun states word letter ->
+       let states =
+         List.map
+           (fun state -> Language.IncrementalAcceptance.parse_letter state letter)
+           states
+       in
+       check_equiacceptance word states;
+       states)
+    states
+    alphabet

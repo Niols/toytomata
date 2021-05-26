@@ -11,25 +11,7 @@ let letters w = List.to_seq (letters_list w)
 let from_letters_list = Fun.id
 let from_letters ls = from_letters_list (List.of_seq ls)
 
-let all_words alphabet =
-  let next_words (words: 'a list Seq.t) : 'a list Seq.t =
-    Seq.flat_map
-      (fun word ->
-         Seq.map
-           (fun letter -> letter :: word)
-           (Alphabet.letters alphabet))
-      words
-  in
-  let rec all_words words =
-    Seq.Cons (words, fun () -> all_words (next_words words))
-  in
-  (fun () -> all_words (fun () -> Cons ([], Seq.empty)))
-  |> Seq.flatten
-  |> Seq.map List.rev
-(** The sequence of all words, by increasing length and alphabetical order
-   within the same length. *)
-
-let not_all_words ~length_limit alphabet =
+let all_words ?(length_limit=max_int) alphabet =
   let next_words (words: 'a list Seq.t) : 'a list Seq.t =
     Seq.flat_map
       (fun word ->
@@ -73,3 +55,22 @@ let add_letter w l =
   w @ [l]
 
 let concat word word' = word @ word'
+
+let fold_all_prefixes ?(at_new_length=fun _ -> ()) ?(length_limit=max_int) f x alphabet =
+  let alphabet = Alphabet.letters_list alphabet in
+  let rec aux length states =
+    (* states only have words of the same length, sorted with respect to
+       Word.compare *)
+    if length < length_limit then
+      (
+        at_new_length length;
+        let states =
+          states |> List.concat_map @@ fun (state, word) ->
+          alphabet |> List.map @@ fun letter ->
+          let word = add_letter word letter in
+          (f state word letter, word)
+        in
+        aux (length+1) states
+      )
+  in
+  aux 0 [x, empty]
