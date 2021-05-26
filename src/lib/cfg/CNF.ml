@@ -1,3 +1,4 @@
+open Ext
 open Common
 open AST
 
@@ -10,6 +11,8 @@ type t =
 type nonterminal = int
 
 let nonterminal_index = Fun.id
+let nonterminal_from_index _ = Fun.id
+
 let nonterminal_to_ast cnf nt = cnf.hints.(nt)
 
 let recognises_empty cnf = cnf.empty
@@ -19,8 +22,14 @@ let start _ = 0
 let iter_terminal_productions f cnf =
   Array.iteri (fun a -> List.iter (fun v -> f a v)) cnf.t_prod
 
+let fold_terminal_productions f x cnf =
+  Array.fold_lefti (fun x a -> List.fold_left (fun x v -> f x a v) x) x cnf.t_prod
+
 let iter_nonterminal_productions f cnf =
   Array.iteri (fun a -> List.iter (fun (b, c) -> f a b c)) cnf.nt_prod
+
+let fold_nonterminal_productions f x cnf =
+  Array.fold_lefti (fun x a -> List.fold_left (fun x (b, c) -> f x a b c) x) x cnf.nt_prod
 
 let check cnf =
   let n = Array.length cnf.t_prod in

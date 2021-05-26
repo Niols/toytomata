@@ -23,11 +23,18 @@ val recognises_empty : t -> bool
 val iter_terminal_productions : (nonterminal -> AST.terminal -> unit) -> t -> unit
 (** Iterate on productions of the form [A -> a]. *)
 
+val fold_terminal_productions : ('a -> nonterminal -> AST.terminal -> 'a) -> 'a -> t -> 'a
+(** Fold on productions of the form [A -> a]. *)
+
 val iter_nonterminal_productions : (nonterminal -> nonterminal -> nonterminal -> unit) -> t -> unit
 (** Iterate on productions of the form [A -> BC]. *)
+
+val fold_nonterminal_productions : ('a -> nonterminal -> nonterminal -> nonterminal -> 'a) -> 'a -> t -> 'a
+(** Fold on productions of the form [A -> BC]. *)
 
 val number_of_nonterminals : t -> int
 
 val nonterminal_index : nonterminal -> int
+val nonterminal_from_index : t -> int -> nonterminal
 
 val nonterminal_to_ast : t -> nonterminal -> AST.nonterminal

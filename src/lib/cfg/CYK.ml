@@ -1,3 +1,4 @@
+open Ext
 open Common
 open AST
 
@@ -65,6 +66,115 @@ let parse g s =
 let accepts g s =
   parse g s <> None
 
+module State = struct
+  module IMap = Map.Make(Int)
+
+  type t =
+    { cnf : CNF.t ;
+      word : Word.t ;
+      trees : parsetree IMap.t IMap.t IMap.t }
+
+  let initial cnf =
+    { cnf ;
+      word = Word.empty ;
+      trees = IMap.empty }
+
+  let get i j nt trees =
+    match IMap.find_opt i trees with
+    | None -> None
+    | Some trees ->
+      match IMap.find_opt j trees with
+      | None -> None
+      | Some trees ->
+        let nt = CNF.nonterminal_index nt in
+        IMap.find_opt nt trees
+
+  let set i j nt trees value =
+    assert (i > 0);
+    assert (j > 0);
+    IMap.update i
+      (fun trees ->
+         let trees = match trees with
+           | None -> IMap.empty
+           | Some trees -> trees
+         in
+         let trees =
+           IMap.update j
+             (fun trees ->
+                let trees = match trees with
+                  | None -> IMap.empty
+                  | Some trees -> trees
+                in
+                let trees =
+                  IMap.update (CNF.nonterminal_index nt)
+                    (fun _ -> Some value)
+                    trees
+                in
+                Some trees)
+             trees
+         in
+         Some trees)
+      trees
+
+  let parse_letter state letter =
+    let cnf = state.cnf in
+    let word = Word.add_letter state.word letter in
+    let n = Word.length word in (* index of [letter] in [word] *)
+    let trees = state.trees in
+
+    let trees =
+      CNF.fold_terminal_productions
+        (fun trees nt t ->
+           if Letter.equal letter t then
+             set 1 n nt trees (TProd t)
+           else trees
+        )
+        trees
+        cnf
+    in
+
+    let trees =
+      fold_for_loop ~from_:2 ~to_:n trees (fun trees l -> (* length of span *)
+          let s = n - l + 1 in (* start of span *)
+          if s > 0 then
+            (
+              fold_for_loop ~from_:1 ~to_:(l-1) trees (fun trees p -> (* partition of span *)
+                  CNF.fold_nonterminal_productions
+                    (fun trees ra rb rc ->
+                       match
+                         get p s rb trees,
+                         get (l-p) (s+p) rc trees
+                       with
+                       | Some ptb, Some ptc ->
+                         set l s ra trees (NTProd ((rb, ptb), (rc, ptc)))
+                       | _ -> trees)
+                    trees
+                    cnf)
+            )
+          else
+            trees
+        )
+    in
+
+    { cnf ; word ; trees }
+
+  let parse_word state word =
+    Word.letters word
+    |> Seq.fold_left parse_letter state
+
+  let parsetree state =
+    if Word.is_empty state.word then
+      if CNF.recognises_empty state.cnf then
+        Some EProd
+      else
+        None
+    else
+      get (Word.length state.word) 1 (CNF.start state.cnf) state.trees
+
+  let accepting state =
+    parsetree state <> None
+end
+
 let%test_module _ =
   (module struct
     let t s = T (Letter.from_string s)
@@ -99,9 +209,27 @@ let%test_module _ =
       in
       CNF.from_cfg cfg
 
-    let accepts cnf w =
-      accepts cnf (Word.from_letters_list (List.map Letter.from_string w))
+    (* Direct parsing *)
 
-    let%test _ = accepts cnf ["she"; "eats"; "a"; "fish"; "with"; "a"; "fork"]
-    let%test _ = not (accepts cnf ["she"; "eats"; "fish"; "with"; "fork"])
+    let accepts word =
+      let word = Word.from_letters_list (List.map Letter.from_string word) in
+      accepts cnf word
+
+    let%test _ = not (accepts [])
+    let%test _ = not (accepts ["she"])
+    let%test _ = accepts ["she"; "eats"]
+    let%test _ = accepts ["she"; "eats"; "a"; "fish"; "with"; "a"; "fork"]
+    let%test _ = not (accepts ["she"; "eats"; "fish"; "with"; "fork"])
+
+    (* Incremental parsing *)
+
+    let accepts word =
+      let word = Word.from_letters_list (List.map Letter.from_string word) in
+      State.(accepting (parse_word (initial cnf) word))
+
+    let%test _ = not (accepts [])
+    let%test _ = not (accepts ["she"])
+    let%test _ = accepts ["she"; "eats"]
+    let%test _ = accepts ["she"; "eats"; "a"; "fish"; "with"; "a"; "fork"]
+    let%test _ = not (accepts ["she"; "eats"; "fish"; "with"; "fork"])
   end)

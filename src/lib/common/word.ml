@@ -3,6 +3,8 @@ open Ext
 type t = Letter.t list
 
 let empty = []
+let is_empty = (=) []
+
 let letters_list = Fun.id
 let letters w = List.to_seq (letters_list w)
 
@@ -66,3 +68,6 @@ let seq_to_alphabet ws =
   list_to_alphabet (List.of_seq ws)
 
 let length = List.length
+
+let add_letter w l =
+  w @ [l]

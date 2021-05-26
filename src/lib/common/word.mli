@@ -2,6 +2,8 @@
 type t
 
 val empty : t
+val is_empty : t -> bool
+
 val letters : t -> Letter.t Seq.t
 val letters_list : t -> Letter.t list
 
@@ -20,3 +22,5 @@ val seq_to_alphabet : t Seq.t -> Alphabet.t
 val list_to_alphabet : t list -> Alphabet.t
 
 val length : t -> int
+
+val add_letter : t -> Letter.t -> t
