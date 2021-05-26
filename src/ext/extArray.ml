@@ -9,3 +9,9 @@ let fold_lefti f x a =
       x
   in
   fold_lefti 0 x
+
+let equal eq a b =
+  List.equal eq (Array.to_list a) (Array.to_list b)
+
+let compare cmp a b =
+  List.compare cmp (Array.to_list a) (Array.to_list b)

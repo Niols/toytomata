@@ -1,3 +1,4 @@
+(** {1 Abstract Type for Words} *)
 
 type t
 
@@ -32,6 +33,6 @@ val fold_all_prefixes :
   ?length_limit:int ->
   ('a -> t -> Letter.t -> 'a) -> 'a -> Alphabet.t -> unit
 (** [fold_all_prefixes f x a] calls [f] on all the words except the empty word,
-    in an order compatible with {!Word.compare}, passing [f] a state and a
-    letter. The state corresponds to the result of the previous run on [f] on the
-    longest strict prefix of the word. The letter is the last letter of the word. *)
+   in an order compatible with {!compare}, passing [f] a state and a letter. The
+   state corresponds to the result of the previous run on [f] on the longest
+   strict prefix of the word. The letter is the last letter of the word. *)

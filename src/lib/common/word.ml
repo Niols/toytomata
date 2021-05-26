@@ -1,15 +1,15 @@
 open Ext
 
-type t = Letter.t list
+type t = Letter.t array
 
-let empty = []
-let is_empty = (=) []
+let empty = [||]
+let is_empty = (=) [||]
 
-let letters_list = Fun.id
-let letters w = List.to_seq (letters_list w)
+let letters = Array.to_seq
+let letters_list = Array.to_list
 
-let from_letters_list = Fun.id
-let from_letters ls = from_letters_list (List.of_seq ls)
+let from_letters = Array.of_seq
+let from_letters_list = Array.of_list
 
 let all_words ?(length_limit=max_int) alphabet =
   let next_words (words: 'a list Seq.t) : 'a list Seq.t =
@@ -29,32 +29,33 @@ let all_words ?(length_limit=max_int) alphabet =
   (fun () -> all_words 0 (fun () -> Cons ([], Seq.empty)))
   |> Seq.flatten
   |> Seq.map List.rev
+  |> Seq.map from_letters_list
 
-let equal = List.equal Letter.equal
+let equal = Array.equal Letter.equal
 
 let compare w1 w2 =
-  let c = Int.compare (List.length w1) (List.length w2) in
+  let c = Int.compare (Array.length w1) (Array.length w2) in
   if c <> 0 then c
-  else List.compare Letter.compare w1 w2
+  else Array.compare Letter.compare w1 w2
 
-let pp fmt w =
-  Format.pp_print_list
+let pp fmt word =
+  Format.pp_print_seq
     ~pp_sep:(fun _fmt () -> ())
     Letter.pp
-    fmt w
+    fmt (letters word)
 
-let list_to_alphabet wl =
-  Alphabet.from_letters_list (List.flatten wl)
+let list_to_alphabet word_list =
+  word_list
+  |> List.concat_map Array.to_list
+  |> Alphabet.from_letters_list
 
-let seq_to_alphabet ws =
-  list_to_alphabet (List.of_seq ws)
+let seq_to_alphabet word_list =
+  list_to_alphabet (List.of_seq word_list)
 
-let length = List.length
+let length = Array.length
 
-let add_letter w l =
-  w @ [l]
-
-let concat word word' = word @ word'
+let concat = Array.append
+let add_letter word letter = concat word [|letter|]
 
 let fold_all_prefixes ?(at_new_length=fun _ -> ()) ?(length_limit=max_int) f x alphabet =
   let alphabet = Alphabet.letters_list alphabet in
