@@ -25,3 +25,18 @@ let accepts p word =
       | _ -> accepts words
   in
   accepts (words p)
+
+module IncrementalAcceptance = struct
+  type state = t * Word.t
+
+  let initial prefix = (prefix, Word.empty)
+
+  let parse_letter (prefix, word) letter =
+    (prefix, Word.add_letter word letter)
+
+  let parse_word (prefix, word) word' =
+    (prefix, Word.concat word word')
+
+  let accepting (prefix, word) =
+    accepts prefix word
+end

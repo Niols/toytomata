@@ -32,3 +32,27 @@ let alphabet obj =
 let accepts obj =
   let Wrapped ((module Obj), obj) = wrap obj in
   Obj.accepts obj
+
+module IncrementalAcceptance = struct
+  type state =
+      State :
+        (module Generic.S with type IncrementalAcceptance.state = 'state)
+        * 'state
+        -> state
+
+  let initial obj =
+    let Wrapped ((module Obj), obj) = wrap obj in
+    State ((module Obj), Obj.IncrementalAcceptance.initial obj)
+
+  let parse_letter state letter =
+    let State ((module Obj), state) = state in
+    State ((module Obj), Obj.IncrementalAcceptance.parse_letter state letter)
+
+  let parse_word state word =
+    let State ((module Obj), state) = state in
+    State ((module Obj), Obj.IncrementalAcceptance.parse_word state word)
+
+  let accepting state =
+    let State ((module Obj), state) = state in
+    Obj.IncrementalAcceptance.accepting state
+end

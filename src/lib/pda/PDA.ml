@@ -59,3 +59,14 @@ let to_cfg = PDA_to_CFG.pda_to_cfg
 let from_cfg = CFG_to_PDA.cfg_to_pda
 
 let accepts pda = CFG.accepts (to_cfg pda)
+
+module IncrementalAcceptance = struct
+  type state = CFG.IncrementalAcceptance.state
+
+  let initial pda =
+    CFG.IncrementalAcceptance.initial (to_cfg pda)
+
+  let parse_letter = CFG.IncrementalAcceptance.parse_letter
+  let parse_word = CFG.IncrementalAcceptance.parse_word
+  let accepting = CFG.IncrementalAcceptance.accepting
+end

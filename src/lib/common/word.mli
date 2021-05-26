@@ -24,3 +24,4 @@ val list_to_alphabet : t list -> Alphabet.t
 val length : t -> int
 
 val add_letter : t -> Letter.t -> t
+val concat : t -> t -> t

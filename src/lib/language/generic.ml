@@ -14,6 +14,17 @@ module type S = sig
 
   val alphabet : t -> Alphabet.t
   val accepts : t -> Word.t -> DecisionResponse.t
+
+  module IncrementalAcceptance : sig
+    type state
+
+    val initial : t -> state
+
+    val parse_letter : state -> Letter.t -> state
+    val parse_word : state -> Word.t -> state
+
+    val accepting : state -> DecisionResponse.t
+  end
 end
 
 type wrapper = Wrapper : (module S with type t = 'a) * ('a -> t) -> wrapper

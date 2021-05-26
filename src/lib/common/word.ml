@@ -71,3 +71,5 @@ let length = List.length
 
 let add_letter w l =
   w @ [l]
+
+let concat word word' = word @ word'

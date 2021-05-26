@@ -71,3 +71,21 @@ let accepts cfg =
    means that for repetitive uses of the same function, it is much more
    efficient to store the result of [accepts cfg] and then call this function
    rather than call [accepts cfg word] again on every word. *)
+
+module IncrementalAcceptance = struct
+  type state = CYK.State.t
+
+  let initial cfg =
+    let cfg = Transform.cnf cfg in
+    let cnf = CNF.from_cfg cfg in
+    CYK.State.initial cnf
+
+  let parse_letter = CYK.State.parse_letter
+  let parse_word = CYK.State.parse_word
+
+  let accepting state =
+    if CYK.State.accepting state then
+      `True
+    else
+      `False
+end
